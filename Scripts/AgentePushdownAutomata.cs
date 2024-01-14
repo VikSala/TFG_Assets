@@ -2,27 +2,35 @@
 using UnityEngine;
 
 // Enumeración de los estados posibles del agente
-public enum EstadoAgente
+public enum EstadoAgenteExistencia
 {
-    SinNecesidad,
-    Hambre,
-    Sed,
-    HuirPeligro,
-    // Otros estados...
+    SinNecesidad, 
+    Hambre,     //El agente tiene hambre 
+    Sed,        //El agente tiene sed 
+    Cansado,    //El agente tiene sueño 
+    Amenaza,    //El agente detecta amenaza 
+    Peligro     //El agente detecta peligro
+}
+
+public enum EstadoAgenteRealidad
+{
+    Recurso,    //El agente detecta un recurso
+    Agente      //El agente detecta un agente
 }
 
 // Clase para manejar el estado actual y la pila de estados
 public class ControladorEstados
 {
-    private EstadoAgente estadoActual;
-    private Stack<EstadoAgente> pilaEstados = new Stack<EstadoAgente>();
+    private EstadoAgenteExistencia estadoActual;
+    private Stack<EstadoAgenteExistencia> pilaEstados = 
+                    new Stack<EstadoAgenteExistencia>();
 
     public ControladorEstados()
     {
-        estadoActual = EstadoAgente.SinNecesidad;
+        estadoActual = EstadoAgenteExistencia.SinNecesidad;
     }
 
-    public void CambiarEstado(EstadoAgente nuevoEstado)
+    public void CambiarEstado(EstadoAgenteExistencia nuevoEstado)
     {
         // Verificar prioridades antes de cambiar el estado
         if (VerificarPrioridad(nuevoEstado))
@@ -32,39 +40,43 @@ public class ControladorEstados
         }
     }
 
-    public void FinalizarEstadoActual()
+    private bool VerificarPrioridad(EstadoAgenteExistencia nuevoEstado)
     {
-        // Puedes agregar lógica adicional si es necesario al finalizar un estado
-        Debug.Log("Finaliza: " + estadoActual.ToString());
-        // Por ahora, simplemente regresamos al estado anterior
-        RegresarEstadoAnterior();
-    }
-
-    private bool VerificarPrioridad(EstadoAgente nuevoEstado)
-    {
-        // Verificar prioridades antes de cambiar el estado
         switch (nuevoEstado)
         {
-            case EstadoAgente.Hambre:
-                return estadoActual != EstadoAgente.HuirPeligro && estadoActual != EstadoAgente.Sed;
-            case EstadoAgente.Sed:
-                return estadoActual != EstadoAgente.HuirPeligro;
-            case EstadoAgente.HuirPeligro:
+            case EstadoAgenteExistencia.Hambre:
+                return estadoActual != EstadoAgenteExistencia.Peligro && 
+                estadoActual != EstadoAgenteExistencia.Amenaza && 
+                estadoActual != EstadoAgenteExistencia.Cansado;
+
+            case EstadoAgenteExistencia.Sed:
+                return estadoActual != EstadoAgenteExistencia.Peligro && 
+                estadoActual != EstadoAgenteExistencia.Amenaza && 
+                estadoActual != EstadoAgenteExistencia.Cansado;
+
+            case EstadoAgenteExistencia.Cansado:
+                return estadoActual != EstadoAgenteExistencia.Peligro && 
+                estadoActual != EstadoAgenteExistencia.Amenaza;
+
+            case EstadoAgenteExistencia.Amenaza:
+                return estadoActual != EstadoAgenteExistencia.Peligro;
+
+            case EstadoAgenteExistencia.Peligro:
                 return true; // Este estado tiene la máxima prioridad
+                
             default:
                 return true;
         }
     }
 
-    public void RegresarEstadoAnterior()
+    public void FinalizarEstadoActual()
     {
-        if (pilaEstados.Count > 0)
-        {
-            estadoActual = pilaEstados.Pop();
-        }
+        Debug.Log("Finaliza: " + estadoActual.ToString());
+        // Si hay estado anterior, regresamos al estado anterior
+        if (pilaEstados.Count > 0) estadoActual = pilaEstados.Pop();
     }
 
-    public EstadoAgente ObtenerEstadoActual()
+    public EstadoAgenteExistencia ObtenerEstadoActual()
     {
         return estadoActual;
     }
@@ -86,17 +98,27 @@ public class AgentePushdownAutomata : MonoBehaviour
         // Simular cambios en el estado del agente desde el editor de Unity
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            controladorEstados.CambiarEstado(EstadoAgente.Hambre);
+            controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre);
             isDebug = true;
         }
         else if (Input.GetKeyDown(KeyCode.W))
         {
-            controladorEstados.CambiarEstado(EstadoAgente.Sed);
+            controladorEstados.CambiarEstado(EstadoAgenteExistencia.Sed);
             isDebug = true;
         }
         else if (Input.GetKeyDown(KeyCode.E))
         {
-            controladorEstados.CambiarEstado(EstadoAgente.HuirPeligro);
+            controladorEstados.CambiarEstado(EstadoAgenteExistencia.Cansado);
+            isDebug = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.R))
+        {
+            controladorEstados.CambiarEstado(EstadoAgenteExistencia.Amenaza);
+            isDebug = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.T))
+        {
+            controladorEstados.CambiarEstado(EstadoAgenteExistencia.Peligro);
             isDebug = true;
         }
         else if (Input.GetKeyDown(KeyCode.Space))
@@ -110,22 +132,27 @@ public class AgentePushdownAutomata : MonoBehaviour
 
     private void TomarDecisiones()
     {
-        EstadoAgente estadoActual = controladorEstados.ObtenerEstadoActual();
-
-        // Tomar decisiones según el estado actual
+        EstadoAgenteExistencia estadoActual = controladorEstados.ObtenerEstadoActual();
+        
         switch (estadoActual)
         {
-            case EstadoAgente.SinNecesidad:
+            case EstadoAgenteExistencia.SinNecesidad:
                 if(isDebug) Debug.Log("El agente no tiene necesidades específicas en este momento.");
                 break;
-            case EstadoAgente.Hambre:
-                if(isDebug) Debug.Log("El agente tiene hambre. Comer algo.");
+            case EstadoAgenteExistencia.Hambre:
+                if(isDebug) Debug.Log("El agente tiene hambre.");
                 break;
-            case EstadoAgente.Sed:
-                if(isDebug) Debug.Log("El agente tiene sed. Beber agua.");
+            case EstadoAgenteExistencia.Sed:
+                if(isDebug) Debug.Log("El agente tiene sed.");
                 break;
-            case EstadoAgente.HuirPeligro:
-                if(isDebug) Debug.Log("¡Peligro! El agente está huyendo.");
+            case EstadoAgenteExistencia.Cansado:
+                if(isDebug) Debug.Log("El agente tiene sueño.");
+                break;
+            case EstadoAgenteExistencia.Amenaza:
+                if(isDebug) Debug.Log("El agente detecta amenaza.");
+                break;
+            case EstadoAgenteExistencia.Peligro:
+                if(isDebug) Debug.Log("¡El agente detecta peligro!");
                 break;
         }
         isDebug = false;
