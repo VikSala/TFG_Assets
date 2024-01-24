@@ -31,7 +31,7 @@ namespace FIMSpace.Basics
             wheel = transform.Find("Wheel");
             fBody = transform.Find("Skeleton");
 
-            fheelekAnimator = new FBasic_FheelekAnimator(this);
+            fheelekAnimator = null;//new FBasic_FheelekAnimator(this);
 
             onlyForward = true;
 
@@ -45,7 +45,7 @@ namespace FIMSpace.Basics
             wheel.localRotation *= Quaternion.Euler(accelerationForward * 480f * Time.deltaTime, 0f, 0f);
 
             // Additional animation stuff
-            fheelekAnimator.Animate(accelerationForward);
+            if(fheelekAnimator != null) fheelekAnimator.Animate(accelerationForward);
 
             // Hard coded turbo
             if (Input.GetKey(KeyCode.LeftShift))
@@ -107,7 +107,7 @@ namespace FIMSpace.Basics
         protected override void RotationCalculations()
         {
             transform.rotation = Quaternion.Euler(0f, animatedDirection, 0f);
-            fBody.rotation = Quaternion.Euler(0f, Mathf.LerpAngle(fBody.rotation.eulerAngles.y, targetDirection, Time.deltaTime * RotationSpeed * 1.25f), 0f);
+            if(fheelekAnimator != null) fBody.rotation = Quaternion.Euler(0f, Mathf.LerpAngle(fBody.rotation.eulerAngles.y, targetDirection, Time.deltaTime * RotationSpeed * 1.25f), 0f);
         }
 
 
@@ -150,7 +150,7 @@ namespace FIMSpace.Basics
             // We rolling all the time forward, so we must do some tweaks for sideways keys - when character jumps it must use sideways velocity calculations
             if (horizontalValue != 0f && verticalValue == 0f) CharacterRigidbody.velocity += new Vector3(-newVelocityRight.z, 0f, newVelocityRight.x);
 
-            fheelekAnimator.Jump();
+            if(fheelekAnimator != null) fheelekAnimator.Jump();
         }
 
         /// <summary>
