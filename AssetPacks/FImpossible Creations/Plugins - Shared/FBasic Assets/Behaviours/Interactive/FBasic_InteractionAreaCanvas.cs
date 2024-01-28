@@ -84,7 +84,7 @@ namespace FIMSpace.Basics
                 }
             }
 
-
+            
 
             // Setting position of text to be viewed on object in 3D space on 2D canvas
             Vector3 targetPos = FVectorMethods.GetUIPositionFromWorldPosition(transform.position + transform.TransformVector(canvasObjectOffset), Camera.main, canvasRect);

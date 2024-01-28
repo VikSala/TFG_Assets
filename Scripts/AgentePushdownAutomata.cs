@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEngine.AI;
 using UnityEngine;
 
 // Enumeración de los estados posibles del agente
@@ -28,22 +27,27 @@ public class ControladorEstados
     private HashSet<EstadoAgenteExistencia> stateHashSet = 
                     new HashSet<EstadoAgenteExistencia>();
 
-    public ControladorEstados()
+    public bool isDebug = false;
+
+    public ControladorEstados(bool isDebug)
     {
+        this.isDebug = isDebug;
         estadoActual = EstadoAgenteExistencia.SinNecesidad;
     }
 
     public bool CambiarEstado(EstadoAgenteExistencia nuevoEstado)
     {
-        // Verificar prioridades antes de cambiar el estado
-        if (!stateHashSet.Contains(nuevoEstado) && VerificarPrioridad(nuevoEstado))
+        bool result = false;
+
+        if(VerificarPrioridad(nuevoEstado)) result = true;
+
+        if (!stateHashSet.Contains(nuevoEstado))
         {
             pilaEstados.Push(estadoActual);
             estadoActual = nuevoEstado;
             stateHashSet.Add(estadoActual);
-            return true;
         }
-        return false;
+        return result;
     }
 
     private bool VerificarPrioridad(EstadoAgenteExistencia nuevoEstado)
@@ -77,11 +81,11 @@ public class ControladorEstados
 
     public void FinalizarEstadoActual()
     {
-        Debug.Log("Finaliza: " + estadoActual.ToString());
+        if(isDebug) Debug.Log("Finaliza: " + estadoActual.ToString());
         // Si hay estado anterior, regresamos al estado anterior
         if (pilaEstados.Count > 0) {
             stateHashSet.Remove(estadoActual);
-            estadoActual = pilaEstados.Pop(); Debug.Log("Nuevo estado: " + estadoActual);
+            estadoActual = pilaEstados.Pop(); if(isDebug) Debug.Log("Nuevo estado: " + estadoActual);
         }
     }
 
@@ -94,23 +98,32 @@ public class ControladorEstados
 // Clase principal del agente
 public class AgentePushdownAutomata : MonoBehaviour
 {
-    public NavMeshAgent navMeshAgent;
-    private ControladorEstados controladorEstados;
-    EstadoAgenteExistencia estadoActual, estadoAnterior;
-    public GameObject Hambre, Sed, Somnolencia;
-    bool desactivarAmenaza = false;
+    public ControladorEstados controladorEstados;
+    protected EstadoAgenteExistencia estadoActual;
+    public bool isDebug = false;
 
-    private void Start()
+    [Tooltip("Variable que maneja los tiempos de la percepción interna sobre los estados: Hambre, Sed, Somnolencia")]
+    public int timeMultiplier = 1;
+
+    [System.NonSerialized]
+    public string[] strEnumExistencia = System.Enum.GetNames(typeof(EstadoAgenteExistencia));
+
+    [System.NonSerialized] public bool isAlerta = false;
+
+    protected virtual void Start()
     {
-        controladorEstados = new ControladorEstados();
+        controladorEstados = new ControladorEstados(isDebug);
         estadoActual = controladorEstados.ObtenerEstadoActual();
 
         InvokeRepeating("UpdatePerception", 0f, 0.25f);
+        
+        //Iniciar percepción interna
+        InternalPerception();
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Q))
+        /*if (Input.GetKeyDown(KeyCode.Q))
         {
             if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre))
                 TomarDecisiones(Hambre.transform.position);
@@ -126,54 +139,70 @@ public class AgentePushdownAutomata : MonoBehaviour
         {
             if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Somnolencia))
                 TomarDecisiones(Somnolencia.transform.position);
-        }
+        }*/
         
-        if (Input.GetKeyDown(KeyCode.Space))
+        /*if (Input.GetKeyDown(KeyCode.Space))
         {
-            controladorEstados.FinalizarEstadoActual();
-        }
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+            //controladorEstados.FinalizarEstadoActual();
+        }*/
     }
-
-    private void TomarDecisiones(Vector3 targetPosition)
+   
+    void TomarDecisiones()
     {
         estadoActual = controladorEstados.ObtenerEstadoActual();
-        estadoAnterior = estadoActual;
         
         switch (estadoActual)
         {
             case EstadoAgenteExistencia.SinNecesidad:
-                //Debug.Log("El agente no tiene necesidades específicas en este momento.");
+                Print("El agente no tiene necesidades específicas en este momento.");
                 break;
             case EstadoAgenteExistencia.Hambre:
-                targetPosition = Hambre.transform.position;
-                navMeshAgent.SetDestination(targetPosition); //Debug.Log("El agente tiene hambre.");
+                Print("El agente tiene hambre.");
                 break;
             case EstadoAgenteExistencia.Sed:
-                targetPosition = Sed.transform.position;
-                navMeshAgent.SetDestination(targetPosition); //Debug.Log("El agente tiene sed.");
+                Print("El agente tiene sed.");
                 break;
             case EstadoAgenteExistencia.Somnolencia:
-                targetPosition = Somnolencia.transform.position;
-                navMeshAgent.SetDestination(targetPosition); //Debug.Log("El agente tiene sueño.");
+                Print("El agente tiene sueño.");
                 break;
             case EstadoAgenteExistencia.Amenaza:
-                //if(isDebug) navMeshAgent.SetDestination(targetPosition);//Debug.Log("El agente detecta amenaza.");
-                navMeshAgent.SetDestination(targetPosition); //Debug.Log("El agente detecta amenaza.");
+                Print("El agente detecta amenaza.");
                 break;
             case EstadoAgenteExistencia.Peligro:
-                //if(isDebug) navMeshAgent.SetDestination(targetPosition); Debug.Log("¡El agente detecta peligro!");
-                navMeshAgent.SetDestination(targetPosition); //Debug.Log("¡El agente detecta peligro!");
+                Print("¡El agente detecta peligro!");
                 break;
         }
     }
 
-    //PERCEPCION
+    //PERCEPCION INTERNA
+    void InternalPerception()
+    {
+        InvokeRepeating("InputSed", 8f*timeMultiplier, 15f*timeMultiplier);
+        InvokeRepeating("InputHambre", 16f*timeMultiplier, 15f*timeMultiplier);
+        InvokeRepeating("InputSomnolencia", 30f*timeMultiplier, 30f*timeMultiplier);
+    }
+    protected virtual void InputSed()
+    {
+        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Sed))
+                TomarDecisiones();
+    }
+    protected virtual void InputHambre()
+    {
+        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre))
+                TomarDecisiones();
+    }
+    protected virtual void InputSomnolencia()
+    {
+        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Somnolencia))
+                TomarDecisiones();
+    }
 
+
+    //PERCEPCION EXTERNA
     public float perceptionRadius = 5f;
     float coneThreshold = 1f;
     public bool debugPerception = false;
-    bool isAlerta = false;
-    public RandomTestSpawner rts;
 
     void OnDrawGizmosSelected()
     {
@@ -188,7 +217,7 @@ public class AgentePushdownAutomata : MonoBehaviour
             Vector3 coneDirection2 = Quaternion.Euler(0, -45, 0) * forward;
 
             Gizmos.color = Color.red;
-            Gizmos.DrawLine(transform.position, transform.position + forward * perceptionRadius * (coneThreshold/6));
+            Gizmos.DrawLine(transform.position, transform.position + forward * 0.85f);//perceptionRadius * (coneThreshold/6));
 
             Gizmos.color = Color.green;
             Gizmos.DrawLine(transform.position, transform.position + coneDirection1 * perceptionRadius * coneThreshold);
@@ -198,11 +227,8 @@ public class AgentePushdownAutomata : MonoBehaviour
         }
     }
     
-    void UpdatePerception() {
+    protected virtual void UpdatePerception() {
         Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
-
-        if(estadoActual != estadoAnterior && estadoActual != EstadoAgenteExistencia.Amenaza)
-            TomarDecisiones(new Vector3());
 
         foreach (Collider collider in colliders) {
 
@@ -218,94 +244,38 @@ public class AgentePushdownAutomata : MonoBehaviour
                     RaycastHit hit;
                     if (Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius)) {
                         if (hit.collider.CompareTag("Player")) {
-
-                            
+                         
                             bool endInteraction = false;
                             switch (hit.collider.gameObject.name)
                             {
-                                case "Hambre":
-                                    if ((estadoActual == EstadoAgenteExistencia.Hambre) && 
-                                    Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius * (coneThreshold/6)))
-                                        endInteraction = true;
+                                case string a when a.Equals(strEnumExistencia[(int)EstadoAgenteExistencia.Hambre]):
+                                    if(estadoActual == EstadoAgenteExistencia.Hambre) endInteraction = true;
                                     break;
-                                case "Sed":
-                                    if ((estadoActual == EstadoAgenteExistencia.Sed) && 
-                                    Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius * (coneThreshold/6)))
-                                        endInteraction = true;
+                                case string a when a.Equals(strEnumExistencia[(int)EstadoAgenteExistencia.Sed]):
+                                    if(estadoActual == EstadoAgenteExistencia.Sed) endInteraction = true;
                                     break;
-                                case "Somnolencia":
-                                    if (estadoActual == EstadoAgenteExistencia.Somnolencia)
-                                        endInteraction = true;
-                                        rts.doSpawn = true;
+                                case string a when a.Equals(strEnumExistencia[(int)EstadoAgenteExistencia.Somnolencia]):
+                                    if (estadoActual == EstadoAgenteExistencia.Somnolencia) endInteraction = true;
                                     break;
-                                case string a when a.Contains("Amenaza"):
+                                case string a when a.Equals(strEnumExistencia[(int)EstadoAgenteExistencia.Amenaza]):
                                     isAlerta = true;
-                                    if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Amenaza)){
-                                        TomarDecisiones(hit.collider.gameObject.transform.position);
-                                        desactivarAmenaza = true;
-                                    }
-                                    if (desactivarAmenaza && Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius * (coneThreshold/6))){
-                                        hit.collider.gameObject.SetActive(false);
-                                        desactivarAmenaza = false;
+                                    if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Amenaza)){ 
+                                        TomarDecisiones();
                                         endInteraction = true;
-                                    }   
+                                    }
                                     break;
-                                case "Peligro":
+                                case string a when a.Equals(strEnumExistencia[(int)EstadoAgenteExistencia.Peligro]):
                                     isAlerta = true;
-                                    if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Peligro)){
-                                        TomarDecisiones(hit.collider.gameObject.transform.position);
-                                        desactivarAmenaza = true;
-                                    }
-                                    if (desactivarAmenaza && Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius * (coneThreshold/6))){
-                                        hit.collider.gameObject.SetActive(false);
-                                        desactivarAmenaza = false;
+                                    if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Amenaza)){ 
+                                        TomarDecisiones();
                                         endInteraction = true;
-                                    }   
+                                    }
                                     break;
                             }
                             if(endInteraction){
                                 controladorEstados.FinalizarEstadoActual();
                                 estadoActual = controladorEstados.ObtenerEstadoActual();
                             }
-                            
-                            /*if (hit.collider.gameObject.name.Equals("Hambre") || hit.collider.gameObject.name.Equals("Sed")){
-                                if ((estadoActual == EstadoAgenteExistencia.Hambre || estadoActual == EstadoAgenteExistencia.Sed)
-                                    && Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius * (coneThreshold/6))){
-                                        controladorEstados.FinalizarEstadoActual();
-                                        estadoActual = controladorEstados.ObtenerEstadoActual();
-                                }
-                            }
-                            else if ((estadoActual == EstadoAgenteExistencia.Somnolencia) && hit.collider.gameObject.name.Equals("Somnolencia")){
-                                controladorEstados.FinalizarEstadoActual();
-                                rts.doSpawn = true;
-                                estadoActual = controladorEstados.ObtenerEstadoActual();
-                            }
-                            else if (hit.collider.gameObject.name.Equals("Peligro")){
-                                isAlerta = true;
-                                if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Peligro)){
-                                    TomarDecisiones(hit.collider.gameObject.transform.position);
-                                    desactivarAmenaza = true;
-                                }
-                                if (desactivarAmenaza && Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius * (coneThreshold/6))){//
-                                        hit.collider.gameObject.SetActive(false);
-                                        controladorEstados.FinalizarEstadoActual();
-                                        desactivarAmenaza = false;
-                                        estadoActual = controladorEstados.ObtenerEstadoActual();
-                                }
-                            }
-                            else if (hit.collider.gameObject.name.Contains("Amenaza")){
-                                isAlerta = true;
-                                if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Amenaza)){
-                                    TomarDecisiones(hit.collider.gameObject.transform.position);
-                                    desactivarAmenaza = true;
-                                }
-                                if (desactivarAmenaza && Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius * (coneThreshold/6))){//
-                                        hit.collider.gameObject.SetActive(false);
-                                        controladorEstados.FinalizarEstadoActual();
-                                        desactivarAmenaza = false;
-                                        estadoActual = controladorEstados.ObtenerEstadoActual();
-                                }
-                            }*/
                         }
                     }
                 }
@@ -314,4 +284,5 @@ public class AgentePushdownAutomata : MonoBehaviour
     }
 
     void AlertaOff(){ isAlerta = false; }
+    void Print(string msg){ if(isDebug) Debug.Log(msg); }
 }

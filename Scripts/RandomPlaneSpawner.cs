@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class RandomTestSpawner : MonoBehaviour
+public class RandomPlaneSpawner : MonoBehaviour
 {
-    public GameObject prefabAmenaza, objectPeligro;
+    public GameObject prefabAmenaza, prefabPeligro;
     public Transform planeToSpawnOn;
     public int numberOfObjects = 10;
     public int seed = 123;
@@ -43,6 +43,7 @@ public class RandomTestSpawner : MonoBehaviour
         container.tag = "Respawn";
 
         float randomX, randomZ;
+        //Instanciar: Amenazas
         for (int i = 0; i < numberOfObjects; i++)
         {
             // Generar posiciones aleatorias en la superficie del plano
@@ -54,13 +55,17 @@ public class RandomTestSpawner : MonoBehaviour
 
             // Instanciar el prefab en la posición calculada
             GameObject spawnedObject = Instantiate(prefabAmenaza, spawnPosition, Quaternion.identity);
+            spawnedObject.name = "Amenaza";
             spawnedObject.transform.parent = container.transform;
         }
 
-        //Mover Peligro
+        //Instanciar: Peligro
         randomX = Random.Range(-planeToSpawnOn.localScale.x * 4.873f, planeToSpawnOn.localScale.x * 4.873f);
         randomZ = Random.Range(-planeToSpawnOn.localScale.z * 4.873f, planeToSpawnOn.localScale.z * 4.873f);
-        objectPeligro.transform.position = new Vector3(randomX, 1f, randomZ) + planeToSpawnOn.position;
-        objectPeligro.SetActive(true);
+        Vector3 enemyPosition = new Vector3(randomX, 1f, randomZ) + planeToSpawnOn.position;
+        
+        GameObject enemyObject = Instantiate(prefabPeligro, enemyPosition, Quaternion.identity);
+        enemyObject.name = "Peligro";
+        enemyObject.transform.parent = container.transform;
     }
 }
