@@ -42,16 +42,10 @@ public class RandomPlaneSpawner : MonoBehaviour
         GameObject container = new GameObject("Contenedor");
         container.tag = "Respawn";
 
-        float randomX, randomZ;
         //Instanciar: Amenazas
         for (int i = 0; i < numberOfObjects; i++)
         {
-            // Generar posiciones aleatorias en la superficie del plano
-            randomX = Random.Range(-planeToSpawnOn.localScale.x * 4.873f, planeToSpawnOn.localScale.x * 4.873f);
-            randomZ = Random.Range(-planeToSpawnOn.localScale.z * 4.873f, planeToSpawnOn.localScale.z * 4.873f);
-
-            // Calcular la posición final en la superficie del plano
-            Vector3 spawnPosition = new Vector3(randomX, 0f, randomZ) + planeToSpawnOn.position;
+            Vector3 spawnPosition = RandomVector();
 
             // Instanciar el prefab en la posición calculada
             GameObject spawnedObject = Instantiate(prefabAmenaza, spawnPosition, Quaternion.identity);
@@ -60,12 +54,29 @@ public class RandomPlaneSpawner : MonoBehaviour
         }
 
         //Instanciar: Peligro
-        randomX = Random.Range(-planeToSpawnOn.localScale.x * 4.873f, planeToSpawnOn.localScale.x * 4.873f);
-        randomZ = Random.Range(-planeToSpawnOn.localScale.z * 4.873f, planeToSpawnOn.localScale.z * 4.873f);
-        Vector3 enemyPosition = new Vector3(randomX, 1f, randomZ) + planeToSpawnOn.position;
+        Vector3 enemyPosition = RandomVector();
         
         GameObject enemyObject = Instantiate(prefabPeligro, enemyPosition, Quaternion.identity);
         enemyObject.name = "Peligro";
         enemyObject.transform.parent = container.transform;
+    }
+
+    public Vector3 RandomVector()
+    {
+        float randomX, randomZ;
+        // Generar posiciones aleatorias en la superficie del plano
+        randomX = Random.Range(-planeToSpawnOn.localScale.x * 4.873f, planeToSpawnOn.localScale.x * 4.873f);
+        randomZ = Random.Range(-planeToSpawnOn.localScale.z * 4.873f, planeToSpawnOn.localScale.z * 4.873f);
+        
+        return new Vector3(randomX, 1f, randomZ) + planeToSpawnOn.position;
+    }
+
+    public float GetDistanciaPlano()
+    {
+        // Calcular la distancia entre los vértices opuestos del plano
+        Vector3 esquina1 = planeToSpawnOn.TransformPoint(new Vector3(-0.5f, 0f, -0.5f)); // Vértice inferior izquierdo
+        Vector3 esquina2 = planeToSpawnOn.TransformPoint(new Vector3(0.5f, 0f, 0.5f));  // Vértice superior derecho
+
+        return Vector3.Distance(esquina1, esquina2);
     }
 }

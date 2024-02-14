@@ -89,19 +89,10 @@ public class AgentePushdownAutomata : MonoBehaviour
         controladorEstados = new ControladorEstados(isDebug);
         estadoActual = controladorEstados.ObtenerEstadoActual();
 
-        InvokeRepeating("PercepcionExterna", 0f, 0.25f);
+        InvokeRepeating("PercepcionExterna", 0f, Util.frecuencia);
         
         //Iniciar percepción interna
         PercepcionInterna();
-    }
-
-    private void Update()
-    {
-        /*if (Input.GetKeyDown(KeyCode.Space))
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
-            //controladorEstados.FinalizarEstadoActual();
-        }*/
     }
    
     void TomarDecisiones()
@@ -131,7 +122,7 @@ public class AgentePushdownAutomata : MonoBehaviour
         }
     }
 
-    //PERCEPCION INTERNA
+    #region PERCEPCION INTERNA
     [Tooltip("Variable que maneja los tiempos de la percepción interna sobre los estados: Hambre, Sed, Somnolencia")]
     public int timeMultiplier = 1;
     void PercepcionInterna()
@@ -155,9 +146,9 @@ public class AgentePushdownAutomata : MonoBehaviour
         if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Somnolencia))
                 TomarDecisiones();
     }
+    #endregion
 
-
-    //PERCEPCION EXTERNA
+    #region PERCEPCION EXTERNA
     protected bool isAlerta = false;
     public float perceptionRadius = 5f;
     float coneThreshold = 1f;
@@ -246,4 +237,5 @@ public class AgentePushdownAutomata : MonoBehaviour
     }
 
     protected void AlertaOff(){ isAlerta = false; }
+    #endregion
 }

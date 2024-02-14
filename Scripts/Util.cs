@@ -3,10 +3,14 @@ using System.Collections.Generic;
 
 public class Util
 {
+    public static float frecuencia = 0.25f;
+    public static string AND = "&"; public static char NOT = '!';
     static string[] strEnumExistencia = Enum.GetNames(typeof(EstadoAgenteExistencia));
     static string[] strEnumRealidad = Enum.GetNames(typeof(EstadoAgenteRealidad));
+    static string[] strEnumEstado = Enum.GetNames(typeof(EstadoAgenteBiologico));
     static string[] strEnumMetas = Enum.GetNames(typeof(MetasAgente));
     static string[] strEnumObjetos = Enum.GetNames(typeof(Objeto));
+    static string[] strEnumObjetivos = Enum.GetNames(typeof(Objetivo));
     static string[] strEnumLugares = Enum.GetNames(typeof(Lugar));
     static string[] strEnumRasgos = Enum.GetNames(typeof(Rasgo));
     static string[] strEnumPropiedades = Enum.GetNames(typeof(Propiedad));
@@ -18,8 +22,12 @@ public class Util
     { return strEnumExistencia[(int)p1]; }
     public static string StrEnum(EstadoAgenteRealidad p1 = EstadoAgenteRealidad.SinValor)
     { return strEnumRealidad[(int)p1]; }
+    public static string StrEnum(EstadoAgenteBiologico p1 = EstadoAgenteBiologico.SinValor)
+    { return strEnumEstado[(int)p1]; }
     public static string StrEnum(Objeto p1 = Objeto.SinValor)
     { return strEnumObjetos[(int)p1]; }
+    public static string StrEnum(Objetivo p1 = Objetivo.SinValor)
+    { return strEnumObjetivos[(int)p1]; }
     public static string StrEnum(Lugar p1 = Lugar.SinValor)
     { return strEnumLugares[(int)p1]; }
     public static string StrEnum(Rasgo p1)
@@ -35,9 +43,7 @@ public class Util
             { StrEnum(Objeto.Lanza), StrEnum(Propiedad.Herramienta) },
             { StrEnum(Objeto.Carne), StrEnum(Propiedad.Comida) },
             { StrEnum(Objeto.Baya), StrEnum(Propiedad.Comida) },
-            { StrEnum(Objeto.Agua), StrEnum(Propiedad.Bebida) },
-            { StrEnum(Lugar.Gremio), StrEnum(Lugar.Gremio) },
-            { StrEnum(EstadoAgenteRealidad.Recurso), StrEnum(EstadoAgenteRealidad.Recurso) }
+            { StrEnum(Objeto.Agua), StrEnum(Propiedad.Bebida) }
         }; 
     }
 
@@ -80,15 +86,15 @@ public enum EstadoAgenteBiologico
 {
     SinValor, 
     ConSed,
-    Sediento,
     ConHambre,
-    Hambriento,
     SinHambre,
     Alimentado,
     SinSed,
     Hidratado,
+    Descansado,
     Cansado,
-    Descansado
+    Sediento,
+    Hambriento
 }
 
 public enum Rasgo
@@ -96,7 +102,7 @@ public enum Rasgo
     Explorador, Conservador,
     Extrovertido, Introvertido,
     Escrupuloso, Despreocupado,
-    Altruista, Egocentrico,
+    Altruista, Egocentrico
 }
 
 public enum Objeto
@@ -108,6 +114,15 @@ public enum Objeto
     Carne,
     Baya,
     Agua
+}
+
+public enum Objetivo
+{
+    SinValor, 
+    Instantaneo,
+    Estatico,
+    Dinamico,
+    DinamicoEstatico
 }
 
 public enum Propiedad
@@ -124,6 +139,6 @@ public enum Lugar
     Gremio,
     Cocina,
     Bosque,
-    Cama,
-    Lago
+    Lago,
+    Huerto
 }
