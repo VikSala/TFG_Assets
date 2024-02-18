@@ -16,7 +16,7 @@ public class LugarManager : MonoBehaviour
         }
     }
     public GameObject[] Lugares;
-    HashSet<InfoLugar> info;
+    HashSet<InfoLugar> info = new();
 
     [System.NonSerialized]
     public float radioPlano;

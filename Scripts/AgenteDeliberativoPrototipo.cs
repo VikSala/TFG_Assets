@@ -1,20 +1,24 @@
 using System;
 using UnityEngine;
-using UnityEngine.AI;
 using System.Collections.Generic;
 
-public class AgenteDeliberativoPrototipo : MonoBehaviour
+public partial class AgenteDeliberativoPrototipo : MonoBehaviour
 {
     HashSet<string> listDeseos = new HashSet<string>{};
     //string metaActual = Util.StrEnum(MetasAgente.SinValor);//Util.StrEnum(MetasAgente.Comerciar);
-    public bool compile = false;
+    public bool compile = false; bool isBreak = false, interrumpir = false;
 
     [NonSerialized]
-    public GameObject ObjetivoTemporal;
-    Personalidad yo;    NodoMeta nodoMeta; string elemento = ""; Vector3 vectorObjetivo = Vector3.zero;
-    EstadoAgenteBiologico estadoAgente = EstadoAgenteBiologico.SinValor;
-    public NavMeshAgent navMeshAgent;
+    public GameObject ObjetivoTemporal, ObjetivoTemporalFinal;
+    Personalidad yo;    string elemento = ""; Vector3 vectorObjetivo;// = Vector3.zero; //NodoMeta nodoMeta; 
+    //EstadoAgenteBiologico estadoAgente = EstadoAgenteBiologico.SinValor;
     public LugarManager lugarManager;
+    string nuevaNecesidad = "", metaSelected = "";
+    [NonSerialized]
+    public string necesidadActual = "";
+    bool mensajeRecibido = false; 
+    [NonSerialized]
+    public bool ejecutandoMeta = false;
 
     //Conocimiento universal
     //Dictionary<string, DataGoals.Data> dicGoals = DataGoals.dicGoals;
@@ -26,7 +30,7 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
 //- largo plazo: el resto de conceptos son read_only
 //Instancias tambien lo hace lp:lugares y cp:objetos
     public HashSet<string> memoria = new HashSet<string>
-        {Util.StrEnum(Objeto.Manos), Util.StrEnum(Objeto.Azada), Util.StrEnum(Objeto.Agua),
+        {Util.StrEnum(Objeto.Manos), Util.StrEnum(Objeto.Azada), Util.StrEnum(Objeto.Agua), Util.StrEnum(Objeto.Lanza),
          Util.StrEnum(Objeto.Carne), Util.StrEnum(Lugar.Gremio), Util.StrEnum(EstadoAgenteRealidad.Recurso), 
          Util.StrEnum(Objeto.Baya), Util.StrEnum(EstadoAgenteBiologico.SinHambre), Util.StrEnum(EstadoAgenteBiologico.SinSed),
          Util.StrEnum(EstadoAgenteBiologico.Descansado), Util.StrEnum(EstadoAgenteExistencia.Amenaza)};//Alimentado, Hidratado, Descansado
@@ -34,11 +38,13 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
     public Dictionary<string, HashSet<string>> instancias = new Dictionary<string, HashSet<string>>(){
         {Util.StrEnum(Objeto.Manos), new HashSet<string>{"Mis Manos"}},
         {Util.StrEnum(Objeto.Azada), new HashSet<string>{"Azada_1"}},
-        {Util.StrEnum(Objeto.Agua), new HashSet<string>{"Agua_1"}},//Lago_2
+        {Util.StrEnum(Objeto.Lanza), new HashSet<string>{"Lanza_1"}},
+        {Util.StrEnum(Objeto.Agua), new HashSet<string>{"Agua_1"}},//Lago_2//"Agua_1"
         {Util.StrEnum(Objeto.Carne), new HashSet<string>{"Carne_1"}},
         {Util.StrEnum(Objeto.Baya), new HashSet<string>{"Baya_1"}},//Huerto_1
         {Util.StrEnum(EstadoAgenteRealidad.Recurso), new HashSet<string>{"Agua", "Carne", "Baya"}},
         {Util.StrEnum(Lugar.Gremio), new HashSet<string>{"Gremio_1", "Gremio_2"}},
+        {Util.StrEnum(Lugar.Cocina), new HashSet<string>{"Cocina_1"}},
         {Util.StrEnum(EstadoAgenteExistencia.Amenaza), new HashSet<string>{}}//Amenaza_Oso_1, Amenaza_Pollo_1
         };
 
@@ -48,45 +54,47 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
     - Seed
 	*/
 
-    void Start()
+    void Awake()
     {
         yo = new Personalidad();
-        
+        InvokeRepeating("IniciarDeliberacion", 0f, Util.frecuencia);
     }
 
     void Update()
     {
-        
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            finalizar = true;
+            ObjetivoRandom = Vector3.zero;
+            Ejecutar();
+        }
     }
 
     void OnValidate()
     {
         if(compile){
-            //TestearCaso();
+            string laMeta = Util.StrEnum(MetasAgente.Atacar);
+            print("Meta " + laMeta + " tiene viabilidad: " + MetaViable(laMeta));
             compile = false;
         }
     }
 
-    void TestearCaso()
+    void IniciarDeliberacion()
     {
-        yo = new Personalidad();//Personalidad yo = new Personalidad();
-        string msg = Util.StrEnum(EstadoAgenteRealidad.Recurso); 
-        string metaSelected = "";
+        metaSelected = "";
         double result = 0; double finalResult = 0;
 
-        //EstadoAgenteBiologico
-        //estadoAgente = (EstadoAgenteBiologico)(int)UnityEngine.Random.Range(1f, 10f);
-        //bool umbral = (int)estadoAgente>=(int)EstadoAgenteBiologico.Cansado ? true : false; print("Estado: "+estadoAgente + " y Umbral: " + umbral);
-        
-        if(newMessage(msg)){
+        if(mensajeRecibido || !ejecutandoMeta || interrumpir){
             foreach(var kv in DataGoals.dicGoals)
             {
                 foreach(string etiqueta in kv.Value.etiquetas)
                 {
-                    //if(msg.Equals(etiqueta))//Si no hay currentMeta ni mensaje: se comenta este if
+                    if(isBreak) {isBreak = false; break;};if(interrumpir) {interrumpir = false;};
+                    if(nuevaNecesidad.Equals(etiqueta) || necesidadActual.Equals(etiqueta) || listDeseos.Count == 0)
                         if(MetaViable(kv.Key)){
-                            print("Meta viable: "+ kv.Key);//
-                            result += yo.Puntua(kv.Value.rasgo, memoria);
+                            //print("Meta viable: "+ kv.Key);//
+                            if(!Meta_.Equals(kv.Key)) result += yo.Puntua(kv.Value.rasgo, memoria);
+                            else  result += yo.Puntua(kv.Value.rasgo, memoria)/2;
                             result += GetOntologyElement(kv.Key);
                             result += ElementoDistancia(kv.Key);
                             
@@ -94,34 +102,55 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
                                 finalResult = result;
                                 metaSelected = kv.Key;
                             }
+                            isBreak = true;
                         }
                     result = 0;
                 }
             }
+            if(metaSelected.Equals("")){listDeseos.Clear(); print("reset"); return;}
+            if(ObjetivoTemporal!=null) ObjetivoTemporalFinal = ObjetivoTemporal;
+            ElementoDistancia(metaSelected, true);
             GetOntologyElement(metaSelected, true);
             IniciarMeta(metaSelected);
         }
-        print(metaSelected + ": " + finalResult);
+        if(!metaSelected.Equals("")) print(metaSelected + ": " + finalResult);
     }
 
     public void IniciarMeta(string meta)
     {
-        nodoMeta = new NodoMeta
+        foreach(string etiqueta in DataGoals.dicGoals[metaSelected].etiquetas) 
+            if(listDeseos.Contains(etiqueta))
+            {
+                listDeseos.Remove(etiqueta);
+                break;
+            }
+
+        Meta_ = meta;
+        Objeto_ = elemento;
+        Objetivo_ = vectorObjetivo;
+
+        Ejecutar();
+        /*nodoMeta = new NodoMeta
         {
-            Meta = meta,
-            Objeto = elemento,
+            Meta_ = meta,
+            Objeto_ = elemento,
             Objetivo = vectorObjetivo
         };
-        nodoMeta.Ejecutar();
+        ejecutandoMeta = true;
+        nodoMeta.Ejecutar();*/
     }
 
-    public bool newMessage(string msg)
+    public void newMessage(string msg)
     {
+        //print("Mensaje: " + msg + " Enviado");
         if(!listDeseos.Contains(msg)){
             listDeseos.Add(msg);
-            return true;
+            necesidadActual = nuevaNecesidad;
+            nuevaNecesidad = msg;
+            mensajeRecibido = true;
+            print("Mensaje: " + msg + " Recibido");
         }
-        return false;
+        mensajeRecibido = false;
     }
 
     public void NuevoEstado(string estado, bool masNecesidad)
@@ -145,26 +174,26 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
         if(masNecesidad){
             if(memoria.Contains(strSin)){
                 memoria.Remove(strSin);
-                memoria.Add(strCon);        print(strCon);
+                memoria.Add(strCon);        //print(strCon);
             }
             else if(memoria.Contains(strSatisfecho)){
                 memoria.Remove(strSatisfecho);
-                memoria.Add(strCon);        print(strCon);
+                memoria.Add(strCon);        //print(strCon);
             }else{
                 memoria.Remove(strCon);
-                memoria.Add(strNecesitado); print(strNecesitado);
+                memoria.Add(strNecesitado); //print(strNecesitado);
             }
         }else{
             if(memoria.Contains(strCon)){
                 memoria.Remove(strCon);
-                memoria.Add(strSin);        print(strSin);
+                memoria.Add(strSin);        //print(strSin);
             }
             else if(memoria.Contains(strNecesitado)){
                 memoria.Remove(strNecesitado);
-                memoria.Add(strCon);        print(strCon);
+                memoria.Add(strCon);        //print(strCon);
             }else{
                 memoria.Remove(strSin);
-                memoria.Add(strSatisfecho); print(strSatisfecho);
+                memoria.Add(strSatisfecho); //print(strSatisfecho);
             }
         }
     }
@@ -177,11 +206,11 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
         {
             foreach(string cosa in memoria)
             {
-                if(CheckCondition(requisito, cosa)) result = true;
+                if(CheckCondition(requisito, cosa)) {result = true; break;}//result = true;
                 else if(and && !requisito.Equals(Util.AND)) return false;
                 if(requisito.Equals(Util.AND))
                     if(!result) return false;
-                    else and = true;
+                    else {and = true; break;}//and = true;
             }
         }
 
@@ -193,21 +222,34 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
         if(requisito.Equals(Util.AND)) return false;
 
         bool condition = true;
+        HashSet<string> container;
         string propiedad = "";
         if(requisito.Contains(Util.NOT))
         {
             requisito = requisito.Trim(Util.NOT);
             condition = false;
         }
-        if (Util.objetoPropiedad.TryGetValue(cosa, out propiedad))
-            if(requisito.Equals(propiedad) && instancias[requisito].Count != 0)
+
+        if(!instancias.TryGetValue(requisito, out container)) 
+            if(memoria.Contains(requisito)) return condition;
+            else if(Util.objetoPropiedad.TryGetValue(cosa, out propiedad) && !requisito.Equals(propiedad)) return !condition;
+        
+        if ((instancias.TryGetValue(requisito, out container) || Util.objetoPropiedad.TryGetValue(cosa, out propiedad))
+                && instancias.TryGetValue(cosa, out container))
+        {
+            //if (Util.objetoPropiedad.TryGetValue(cosa, out propiedad))
+            if(requisito.Equals(propiedad) && instancias[cosa].Count != 0)
             { 
-                foreach(string objeto in instancias[requisito])
+                foreach(string objeto in instancias[cosa])
                     if(objeto.Contains(cosa)) return condition;
                 return !condition;
-            }else return !condition;
-        else if (instancias[requisito].Count != 0) return condition;//.Contains(requisito)) return condition;
-        else return !condition;
+            } else if(instancias[cosa].Count == 0)  return !condition;
+            if (instancias[requisito].Count != 0) return condition;
+
+            return !condition;
+        }
+        
+        return !condition;
     }
 
     float GetOntologyElement(string meta, bool isFinal = false)
@@ -216,7 +258,7 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
 
         foreach(Tuple<string, float> element in DataGoals.dicGoalOntology[meta])
         {
-            if(element.Item2 > result && instancias[element.Item1].Count != 0){//memoria.Contains(element.Item1)){//uff
+            if(element.Item2 > result && instancias[element.Item1].Count != 0){
                 strElement = element.Item1;
                 result = element.Item2;
             }
@@ -230,11 +272,23 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
     {
         if(DataGoals.dicGoals[meta].objetivo.Item2.Equals(Util.StrEnum(Objetivo.Instantaneo))) 
             return 1;
-        else if(DataGoals.dicGoals[meta].objetivo.Item2.Equals(Util.StrEnum(Objetivo.Dinamico)) && !isFinal) 
-            return 0.5f;
+        else if(DataGoals.dicGoals[meta].objetivo.Item2.Equals(Util.StrEnum(Objetivo.Dinamico))) 
+            if(ObjetivoTemporal == null)
+            {
+                if(isFinal) vectorObjetivo = Vector3.zero;
+                return 0.5f;
+            } 
+            else{
+                foreach(Tuple<string, float> element in DataGoals.dicGoalOntology[meta])
+                    if(ObjetivoTemporal.name.Contains(element.Item1)) 
+                        if(!isFinal) return 1;
+                        else vectorObjetivo = ObjetivoTemporalFinal.transform.position;
+               
+                //ObjetivoTemporal = null;
+                return 0.5f;
+            }
 
         float result, distancia, distanciaFinal = 0, radio = lugarManager.radioPlano;
-        //float objetivo = UnityEngine.Random.Range(50f, 150f);//
         float umbral = radio;
         bool descansado = memoria.Contains(Util.StrEnum(EstadoAgenteBiologico.Descansado));         //+-10%
         bool trabajador = yo.myPersAttributes.Contains(Util.StrEnum(Rasgo.Escrupuloso) + yo._Total); //+-10%
@@ -243,19 +297,18 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
         umbral = trabajador ? umbral*1.1f : umbral*0.9f;
 
         //Calcular Objetivos Estáticos
-        Vector3 lugar = Vector3.zero;
+        Vector3 lugar = Vector3.zero, lugarCercano = Vector3.zero;
         foreach(string instancia in instancias[DataGoals.dicGoals[meta].objetivo.Item1]){
             lugar = lugarManager.ObtenerPosicionLugar(instancia);
             distancia = Vector3.Distance(transform.position, lugar);
-            if(distancia < distanciaFinal || distanciaFinal==0) distanciaFinal = distancia;
+            if(distancia < distanciaFinal || distanciaFinal==0) 
+            {
+                distanciaFinal = distancia;
+                lugarCercano = lugar;
+            }
         }
         
-        if(isFinal){
-            if(DataGoals.dicGoals[meta].objetivo.Item2.Equals(Util.StrEnum(Objetivo.Dinamico)))
-                vectorObjetivo = ObjetivoTemporal.transform.position;//nodoMeta.Objetivo = ObjetivoTemporal.transform.position;
-            else
-                vectorObjetivo = lugar;//nodoMeta.Objetivo = lugar;
-        }
+        if(isFinal) vectorObjetivo = lugarCercano;
 
         if(distanciaFinal < umbral && distanciaFinal < radio) result = 1f;//print("El objetivo a " + distanciaFinal + " metros está cerca.");
         else if(distanciaFinal > radio && distanciaFinal > umbral) result = 0.5f;//print("El objetivo a " + distanciaFinal + " metros está lejos.");
@@ -266,148 +319,6 @@ public class AgenteDeliberativoPrototipo : MonoBehaviour
 
 }
 
-public class NodoMeta : MonoBehaviour
-{
-    public string Objeto; public Vector3 Objetivo;
-    public string Meta = Util.StrEnum(MetasAgente.SinValor);
-    public AgenteDeliberativoPrototipo agenteDeliberativo;
-    bool destinoAlcanzado = false;
-    public RandomPlaneSpawner rps;
-
-    public void Ejecutar()
-    {
-        switch (Meta)
-        {
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Comer)):
-                print("Comer");
-                agenteDeliberativo.instancias[Objeto.Split("_")[0]].Remove(Objeto);//agenteDeliberativo.memoria.Remove(Objeto);//Split("_")[0]
-                agenteDeliberativo.NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Hambre), false);
-                break;
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Beber)):
-                print("Beber");
-                agenteDeliberativo.instancias[Objeto.Split("_")[0]].Remove(Objeto);//agenteDeliberativo.memoria.Remove(Objeto);
-                agenteDeliberativo.NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Sed), false);
-                break;
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Dormir)):
-                Ir(); print("Dormir");
-                if(destinoAlcanzado) agenteDeliberativo.NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Somnolencia), false);
-                break;
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Atacar)):
-                Ir(); print("Atacar");
-                break;
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Huir)):
-                Ir(); print("Huir");
-                break;
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Recolectar)):
-                Ir(); print("Recolectar");
-                break;
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Cocinar)):
-                Ir(); print("Cocinar");
-                break;
-            case string a when a.Equals(Util.StrEnum(MetasAgente.Comerciar)):
-                Ir(); print("Comerciar");
-                break;
-        }
-    }
-
-    public void Ir()
-    {
-        if(Objetivo != null) agenteDeliberativo.navMeshAgent.SetDestination(Objetivo);
-        else {
-            agenteDeliberativo.navMeshAgent.SetDestination(rps.RandomVector());
-            print("Explorar coordenada...");
-        }
-    }
-}
-
-public class DataGoals
-{
-    public static Dictionary<string, HashSet<Tuple<string, float>>> dicGoalOntology = GetGoalElementsOntology();
-    public struct Data
-    {
-        public string rasgo;
-        public string[] etiquetas;
-        public string[] prerequisitos;
-        public Tuple<string, string> objetivo;//Para aquellos que utilizan instrumentacion?
-    }
-    public static Dictionary<string, Data> dicGoals = new Dictionary<string, Data>()
-	{ { Util.StrEnum(MetasAgente.Comer), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Hambre)},
-                    prerequisitos = new string[]{Util.StrEnum(Propiedad.Comida), Util.AND, Util.NOT+Util.StrEnum(EstadoAgenteBiologico.Alimentado)},
-                    objetivo = Tuple.Create(Util.StrEnum(Propiedad.Comida), Util.StrEnum(Objetivo.Instantaneo)),
-                    rasgo = Util.StrEnum(Rasgo.Despreocupado)} }, 
-      { Util.StrEnum(MetasAgente.Beber), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Sed)},
-                    prerequisitos = new string[]{Util.StrEnum(Propiedad.Bebida), Util.AND, Util.NOT+Util.StrEnum(EstadoAgenteBiologico.Hidratado)},
-                    objetivo = Tuple.Create(Util.StrEnum(Propiedad.Bebida), Util.StrEnum(Objetivo.Instantaneo)),
-                    rasgo = Util.StrEnum(Rasgo.Conservador)} },
-      { Util.StrEnum(MetasAgente.Dormir), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Somnolencia)},
-                    prerequisitos = new string[]{Util.StrEnum(Lugar.Gremio), Util.AND, Util.NOT+Util.StrEnum(EstadoAgenteBiologico.Descansado)},
-                    objetivo = Tuple.Create(Util.StrEnum(Lugar.Gremio), Util.StrEnum(Objetivo.Estatico)),
-                    rasgo = Util.StrEnum(Rasgo.Introvertido)} },
-      { Util.StrEnum(MetasAgente.Atacar), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Amenaza), Util.StrEnum(EstadoAgenteExistencia.Peligro)},
-                    prerequisitos = new string[]{Util.StrEnum(Propiedad.Herramienta), Util.AND, Util.StrEnum(EstadoAgenteExistencia.Amenaza)},
-                    objetivo = Tuple.Create(Util.StrEnum(Objetivo.SinValor), Util.StrEnum(Objetivo.Dinamico)),
-                    rasgo = Util.StrEnum(Rasgo.Egocentrico)} },
-      { Util.StrEnum(MetasAgente.Huir), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Amenaza), Util.StrEnum(EstadoAgenteExistencia.Peligro)},
-                    prerequisitos = new string[]{Util.StrEnum(EstadoAgenteExistencia.Amenaza)},
-                    objetivo = Tuple.Create(Util.StrEnum(Lugar.Gremio), Util.StrEnum(Objetivo.Estatico)),
-                    rasgo = Util.StrEnum(Rasgo.Altruista)} }, 
-      { Util.StrEnum(MetasAgente.Recolectar), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Sed), Util.StrEnum(EstadoAgenteExistencia.Hambre)},
-                    prerequisitos = new string[]{Util.StrEnum(Propiedad.Herramienta)},
-                    objetivo = Tuple.Create(Util.StrEnum(Objetivo.SinValor), Util.StrEnum(Objetivo.Dinamico)),//Depende: Lago y Huerto
-                    rasgo = Util.StrEnum(Rasgo.Explorador)} },
-      { Util.StrEnum(MetasAgente.Cocinar), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Hambre)},
-                    prerequisitos = new string[]{Util.StrEnum(Propiedad.Comida)},
-                    objetivo = Tuple.Create(Util.StrEnum(Lugar.Cocina), Util.StrEnum(Objetivo.Estatico)),
-                    rasgo = Util.StrEnum(Rasgo.Escrupuloso)} },
-      { Util.StrEnum(MetasAgente.Comerciar), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteRealidad.Agente), Util.StrEnum(EstadoAgenteExistencia.Sed), Util.StrEnum(EstadoAgenteExistencia.Hambre)},
-                    prerequisitos = new string[]{Util.StrEnum(Lugar.Gremio), Util.AND, Util.StrEnum(EstadoAgenteRealidad.Recurso)},
-                    objetivo = Tuple.Create(Util.StrEnum(Lugar.Gremio), Util.StrEnum(Objetivo.Estatico)),
-                    rasgo = Util.StrEnum(Rasgo.Extrovertido)}}
-    };
-
-    static Dictionary<string, HashSet<Tuple<string, float>>> GetGoalElementsOntology()
-    {
-        Dictionary<string, HashSet<Tuple<string, float>>> dicGoalElementsOntology = new();
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Comer), new HashSet<Tuple<string, float>>(){
-            Tuple.Create(Util.StrEnum(Objeto.Baya), 0.5f),
-            Tuple.Create(Util.StrEnum(Objeto.Carne), 1.0f)});
-
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Beber), new HashSet<Tuple<string, float>>(){
-            Tuple.Create(Util.StrEnum(Objeto.Agua), 1.0f)});
-
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Dormir), new HashSet<Tuple<string, float>>(){
-            Tuple.Create(Util.StrEnum(Lugar.Gremio), 1.0f)});
-
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Atacar), new HashSet<Tuple<string, float>>(){
-            Tuple.Create(Util.StrEnum(Objeto.Manos), 0.5f),
-            Tuple.Create(Util.StrEnum(Objeto.Lanza), 1.0f)});
-
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Huir), new HashSet<Tuple<string, float>>(){});
-
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Recolectar), new HashSet<Tuple<string, float>>(){
-            Tuple.Create(Util.StrEnum(Objeto.Manos), 0.5f),
-            Tuple.Create(Util.StrEnum(Objeto.Azada), 1.0f)});
-
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Cocinar), new HashSet<Tuple<string, float>>(){
-            Tuple.Create(Util.StrEnum(Objeto.Baya), 0.5f),
-            Tuple.Create(Util.StrEnum(Objeto.Carne), 1.0f)});
-
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Comerciar), new HashSet<Tuple<string, float>>(){
-            Tuple.Create(Util.StrEnum(Objeto.Carne), 0.5f),
-            Tuple.Create(Util.StrEnum(Objeto.Agua), 0.5f),
-            Tuple.Create(Util.StrEnum(Objeto.Baya), 1.0f)});
-        
-        return dicGoalElementsOntology;
-    }
-}
 
 public class Personalidad
 {

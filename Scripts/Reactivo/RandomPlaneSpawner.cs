@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class RandomPlaneSpawner : MonoBehaviour
 {
@@ -6,14 +7,57 @@ public class RandomPlaneSpawner : MonoBehaviour
     public Transform planeToSpawnOn;
     public int numberOfObjects = 10;
     public int seed = 123;
-    public bool useSeed = false;
+    public bool useSeed = false, isProtoReactivo = false;
     
     [System.NonSerialized]
     public bool doSpawn = true;
 
+    //public Dictionary<GameObject, int> objetosFrecuencia = new Dictionary<GameObject, int>();
+    public List<ObjectFrequency> objetosFrecuencia = new List<ObjectFrequency>();
+
     void Start()
     {
-        InvokeRepeating("SpawnManager", 0f, 1f);
+        if(isProtoReactivo) InvokeRepeating("SpawnManager", 0f, 1f);
+        else SpawnPorFrecuencia();
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            SpawnPorFrecuencia();
+        }
+    }
+
+    void SpawnPorFrecuencia()
+    {
+        GameObject respawnObject = GameObject.FindWithTag("Respawn");
+        if(respawnObject != null) Destroy(respawnObject);
+
+        if (!useSeed)
+        {
+            // Semilla basada en el tiempo actual
+            seed = System.Environment.TickCount;
+        }
+        Random.InitState(seed);
+
+        // Crear un objeto vacío como contenedor
+        GameObject container = new GameObject("Contenedor");
+        container.tag = "Respawn";
+
+        // Instanciar los objetos basados en la frecuencia
+        foreach (var kvp in objetosFrecuencia)
+        {
+            for (int i = 0; i < kvp.frequency; i++)
+            {
+                Vector3 spawnPosition = RandomVector();
+
+                // Instanciar el prefab en la posición calculada
+                GameObject spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.identity);
+                spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();//+= i.ToString();//
+                spawnedObject.transform.parent = container.transform;
+            }
+        }
     }
 
     void SpawnManager()
@@ -45,7 +89,7 @@ public class RandomPlaneSpawner : MonoBehaviour
         //Instanciar: Amenazas
         for (int i = 0; i < numberOfObjects; i++)
         {
-            Vector3 spawnPosition = RandomVector();
+            Vector3 spawnPosition = RandomVector(); spawnPosition.y = 0.622f;
 
             // Instanciar el prefab en la posición calculada
             GameObject spawnedObject = Instantiate(prefabAmenaza, spawnPosition, Quaternion.identity);
@@ -74,9 +118,16 @@ public class RandomPlaneSpawner : MonoBehaviour
     public float GetDistanciaPlano()
     {
         // Calcular la distancia entre los vértices opuestos del plano
-        Vector3 esquina1 = planeToSpawnOn.TransformPoint(new Vector3(-0.5f, 0f, -0.5f)); // Vértice inferior izquierdo
-        Vector3 esquina2 = planeToSpawnOn.TransformPoint(new Vector3(0.5f, 0f, 0.5f));  // Vértice superior derecho
-
-        return Vector3.Distance(esquina1, esquina2);
+        Vector3 esquina1 = planeToSpawnOn.TransformPoint(new Vector3(-4.873f, 0f, -4.873f)); // Vértice inferior izquierdo
+        Vector3 esquina2 = planeToSpawnOn.TransformPoint(new Vector3(4.873f, 0f, 4.873f));  // Vértice superior derecho
+        
+        return Vector3.Distance(esquina1, esquina2)/2;
     }
+}
+
+[System.Serializable]
+public class ObjectFrequency
+{
+    public GameObject gameObject;
+    public int frequency;
 }

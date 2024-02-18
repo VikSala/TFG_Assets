@@ -70,7 +70,7 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
     protected override void PercepcionExterna() {
         Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
 
-        if(estadoActual != estadoAnterior && (int)estadoActual < (int)EstadoAgenteExistencia.Amenaza)
+        if(estadoActual != estadoAnterior && (int)estadoActual < (int)EstadoAgenteExistencia.Amenaza)//estadoActual != EstadoAgenteExistencia.Amenaza)//
             TomarDecisiones(new Vector3());
 
         foreach (Collider collider in colliders) {
@@ -118,7 +118,6 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
                                     break;
                                 case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Peligro)):
                                     isAlerta = true;
-                                    desactivarAmenaza = true;
                                     if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Peligro)){ 
                                         TomarDecisiones(hit.collider.gameObject.transform.position);
                                         desactivarAmenaza = true;

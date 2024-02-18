@@ -11,7 +11,7 @@ public class Util
     static string[] strEnumMetas = Enum.GetNames(typeof(MetasAgente));
     static string[] strEnumObjetos = Enum.GetNames(typeof(Objeto));
     static string[] strEnumObjetivos = Enum.GetNames(typeof(Objetivo));
-    static string[] strEnumLugares = Enum.GetNames(typeof(Lugar));
+    public static string[] strEnumLugares = Enum.GetNames(typeof(Lugar));
     static string[] strEnumRasgos = Enum.GetNames(typeof(Rasgo));
     static string[] strEnumPropiedades = Enum.GetNames(typeof(Propiedad));
     public static Dictionary<string, string> objetoPropiedad = GetObjetoPropiedad();
@@ -139,6 +139,6 @@ public enum Lugar
     Gremio,
     Cocina,
     Bosque,
-    Lago,
-    Huerto
+    Lago,//En etiqueta sed meta: irLago
+    Huerto//En etiqueta hambre meta: irHuerto
 }
