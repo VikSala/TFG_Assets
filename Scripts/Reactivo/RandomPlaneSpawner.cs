@@ -11,8 +11,6 @@ public class RandomPlaneSpawner : MonoBehaviour
     
     [System.NonSerialized]
     public bool doSpawn = true;
-
-    //public Dictionary<GameObject, int> objetosFrecuencia = new Dictionary<GameObject, int>();
     public List<ObjectFrequency> objetosFrecuencia = new List<ObjectFrequency>();
 
     void Start()
@@ -21,15 +19,7 @@ public class RandomPlaneSpawner : MonoBehaviour
         else SpawnPorFrecuencia();
     }
 
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            SpawnPorFrecuencia();
-        }
-    }
-
-    void SpawnPorFrecuencia()
+    public void SpawnPorFrecuencia()
     {
         GameObject respawnObject = GameObject.FindWithTag("Respawn");
         if(respawnObject != null) Destroy(respawnObject);

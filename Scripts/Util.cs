@@ -121,8 +121,7 @@ public enum Objetivo
     SinValor, 
     Instantaneo,
     Estatico,
-    Dinamico,
-    DinamicoEstatico
+    Dinamico
 }
 
 public enum Propiedad

@@ -12,8 +12,6 @@ public class AgenteReactivoFinal : AgentePushdownAutomata
         
         //Iniciar con comer
         if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre)){
-            //controladorEstados.FinalizarEstadoActual();
-            //estadoActual = controladorEstados.ObtenerEstadoActual();
             TomarDecisiones(null);
         }
     }
@@ -38,24 +36,16 @@ public class AgenteReactivoFinal : AgentePushdownAutomata
                 Util.Print("El agente no tiene necesidades específicas en este momento.", isDebug);
                 break;
             case EstadoAgenteExistencia.Hambre:
-                AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Hambre));//target = Hambre.transform.position;
-                //Util.Print("Reactivo detecta hambre.", true);//navMeshAgent.SetDestination(target); Util.Print("El agente tiene hambre.", isDebug);
+                AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Hambre));
                 break;
             case EstadoAgenteExistencia.Sed:
                 AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Sed));
-                //Util.Print("Reactivo detecta sed.", true);
                 break;
             case EstadoAgenteExistencia.Somnolencia:
                 AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Somnolencia));
-                //Util.Print("Reactivo detecta Somnolencia.", true);
                 break;
             case EstadoAgenteExistencia.Amenaza:
                 AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Amenaza));
-                //Util.Print("Reactivo detecta Amenaza.", true);
-                break;
-            case EstadoAgenteExistencia.Peligro:
-                AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Peligro));
-                //Util.Print("Reactivo detecta Peligro.", true);
                 break;
         }
     }
@@ -63,32 +53,23 @@ public class AgenteReactivoFinal : AgentePushdownAutomata
     //PERCEPCION INTERNA
     protected override void InputSed()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Sed)){
-            AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Sed));
-            AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Sed), true);
-        }
+        AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Sed), true);
+        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Sed)) TomarDecisiones(null);
     }
     protected override void InputHambre()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre)){
-            AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Hambre));
-            AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Hambre), true);
-        }
+        AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Hambre), true);
+        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre)) TomarDecisiones(null);
     }
     protected override void InputSomnolencia()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Somnolencia)){
-            AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().newMessage(Util.StrEnum(EstadoAgenteExistencia.Somnolencia));
-            AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Somnolencia), true);
-        }
+        AgenteDeliberativo.GetComponent<AgenteDeliberativoPrototipo>().NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Somnolencia), true);
+        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Somnolencia)) TomarDecisiones(null);
     }
     
     //PERCEPCION EXTERNA
     protected override void PercepcionExterna() {
         Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
-
-        if(estadoActual != estadoAnterior && (int)estadoActual < (int)EstadoAgenteExistencia.Amenaza)
-           TomarDecisiones(null);
 
         foreach (Collider collider in colliders) {
 
@@ -104,7 +85,6 @@ public class AgenteReactivoFinal : AgentePushdownAutomata
                     RaycastHit hit;
                     if (Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius)) {
                         if (hit.collider.CompareTag("Player")) {
-
                             
                             bool endInteraction = false;
                             switch (hit.collider.gameObject.name)

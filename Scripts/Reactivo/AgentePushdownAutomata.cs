@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 // Clase para manejar el estado actual y la pila de estados
 public class ControladorEstados
@@ -89,7 +88,7 @@ public class AgentePushdownAutomata : MonoBehaviour
         controladorEstados = new ControladorEstados(isDebug);
         estadoActual = controladorEstados.ObtenerEstadoActual();
 
-        InvokeRepeating("PercepcionExterna", 0f, 0.25f);//Util.frecuencia);
+        InvokeRepeating("PercepcionExterna", 0f, Util.frecuencia-0.01f);
         
         //Iniciar percepción interna
         PercepcionInterna();

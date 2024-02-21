@@ -4,18 +4,14 @@ using System.Linq;
 using UnityEngine.AI;
 using System.Collections.Generic;
 
-public partial class AgenteDeliberativoPrototipo : MonoBehaviour
+public partial class BaseDeliberativo : MonoBehaviour
 {
     public string Objeto_; public Vector3 Objetivo_, ObjetivoRandom = Vector3.zero;
     public string Meta_ = Util.StrEnum(MetasAgente.SinValor);
-    bool navegar = false, finalizar = false;
+    protected bool navegar = false, finalizar = false;
     public RandomPlaneSpawner rps;
     public NavMeshAgent navMeshAgent;
 
-    void Start()
-    {
-        InvokeRepeating("Ir", 0f, 0.26f);//Util.frecuencia);
-    }
 
     public void Ejecutar()
     {
@@ -25,7 +21,7 @@ public partial class AgenteDeliberativoPrototipo : MonoBehaviour
         {
             case string a when a.Equals(Util.StrEnum(MetasAgente.Comer)):
                 print("Comer: " + Objeto_);
-                instancias[Objeto_].Remove(instancias[Objeto_].First());
+                if(instancias[Objeto_].Count != 0) instancias[Objeto_].Remove(instancias[Objeto_].First());
                 if(instancias[Objeto_].Count == 0) 
                     instancias[Util.StrEnum(EstadoAgenteRealidad.Recurso)].Remove(Objeto_);
                 NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Hambre), false);
@@ -48,6 +44,8 @@ public partial class AgenteDeliberativoPrototipo : MonoBehaviour
                     navegar = false;
                     NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Somnolencia), false);
                     print("Dormir");
+                    ObjetivoTemporalFinal = null; ObjetivoTemporal = null; instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Clear();
+                    rps.SpawnPorFrecuencia();
                     finalizar = false;
                     ejecutandoMeta = false;
                 }
@@ -57,15 +55,11 @@ public partial class AgenteDeliberativoPrototipo : MonoBehaviour
                 if(finalizar) 
                 {
                     navegar = false;
-                    if(ObjetivoTemporalFinal!=null && ObjetivoTemporalFinal.name.Split("_")[0].Equals(Util.StrEnum(EstadoAgenteExistencia.Amenaza)))
-                    {
-                        if(instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Contains(ObjetivoTemporalFinal.name))
-                            instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Remove(ObjetivoTemporalFinal.name);
-                        else
-                            instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Remove(instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].First());
+                    
+                    if(ObjetivoTemporalFinal!=null && ObjetivoTemporalFinal.name.Split("_")[0].Equals(Util.StrEnum(EstadoAgenteExistencia.Amenaza))) 
                         ObjetivoTemporalFinal.GetComponent<DestruirAlEntrar>().toDestroy = true;
-                    }
-                    ObjetivoTemporal = null; ObjetivoTemporalFinal=null;
+
+                    instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Clear(); ObjetivoTemporal = null; //ObjetivoTemporalFinal=null; 
                     print("Atacar");
                     finalizar = false;
                     ejecutandoMeta = false;
@@ -76,15 +70,8 @@ public partial class AgenteDeliberativoPrototipo : MonoBehaviour
                 if(finalizar) 
                 {
                     navegar = false;
-                    print("Huir");
-                    if(ObjetivoTemporalFinal!=null)
-                    {
-                        if(instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Contains(ObjetivoTemporalFinal.name))
-                            instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Remove(ObjetivoTemporalFinal.name);
-                        else
-                            instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Remove(instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].First());
-                    }else
-                            instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Remove(instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].First());
+                    instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Clear();
+                    print("Huir"); 
                     finalizar = false;
                     ejecutandoMeta = false;
                 }
@@ -104,7 +91,7 @@ public partial class AgenteDeliberativoPrototipo : MonoBehaviour
                             ObjetivoTemporalFinal.GetComponent<DestruirAlEntrar>().toDestroy = true;
                             print("Recolectar: " + instancia);
                         }
-                        ObjetivoTemporal = null; ObjetivoTemporalFinal = null;
+                        ObjetivoTemporal = null; //ObjetivoTemporalFinal = null;
                     }
                     finalizar = false;
                     ejecutandoMeta = false;
@@ -135,33 +122,37 @@ public partial class AgenteDeliberativoPrototipo : MonoBehaviour
                 if(finalizar) 
                 {
                     navegar = false;
-                    print("Comerciar");
+                    instancias[Objeto_].Remove(instancias[Objeto_].First());
+                    if(instancias[Objeto_].Count == 0) 
+                        instancias[Util.StrEnum(EstadoAgenteRealidad.Recurso)].Remove(Objeto_);
+                    string nuevaBebida = Util.StrEnum(Objeto.Agua)+instancias[Util.StrEnum(Objeto.Agua)].Count();
+                    instancias[Util.StrEnum(Objeto.Agua)].Add(nuevaBebida);
+                    instancias[Util.StrEnum(EstadoAgenteRealidad.Recurso)].Add(Util.StrEnum(Objeto.Agua));
+                    print("Comerciar " + Objeto_ + " por: " + nuevaBebida);
+                    //BEBER
+                    print("Beber");
+                    instancias[Util.StrEnum(Objeto.Agua)].Remove(nuevaBebida);
+                    if(instancias[Util.StrEnum(Objeto.Agua)].Count == 0) 
+                        instancias[Util.StrEnum(EstadoAgenteRealidad.Recurso)].Remove(Util.StrEnum(Objeto.Agua));
+                    NuevoEstado(Util.StrEnum(EstadoAgenteExistencia.Sed), false);
+                    //END BEBER
                     finalizar = false;
                     ejecutandoMeta = false;
                 }
                 break;
         }
-        //necesidadActual = "";
-        //ejecutandoMeta = false;
+        
     }
 
-    public void Ir()
+    protected virtual void Ir()
     {
-        if(Meta_.Equals(Util.StrEnum(MetasAgente.Recolectar)) && ObjetivoTemporal != null)
-            if(ObjetivoTemporal.name.Contains(Util.StrEnum(EstadoAgenteRealidad.Recurso)))
-                {interrumpir = true;}//Objetivo_ = ObjetivoTemporal.transform.position; ObjetivoTemporalFinal = ObjetivoTemporal;}
         if(navegar && !finalizar)
         {
             if(Objetivo_ != Vector3.zero) navMeshAgent.SetDestination(Objetivo_);
             else if(ObjetivoRandom == Vector3.zero){
-                if(Meta_.Equals(Util.StrEnum(MetasAgente.Atacar)))
-                {
-                    finalizar = true; print("Enemigo Perdido..."); Ejecutar(); return;
-                }
-                
                 ObjetivoRandom = rps.RandomVector();
                 navMeshAgent.SetDestination(ObjetivoRandom);
-                print("Explorar coordenada...");
+                //print("Explorar coordenada...");
             }
 
             if (navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance && !navMeshAgent.pathPending){
@@ -182,7 +173,7 @@ public class DataGoals
         public string rasgo;
         public string[] etiquetas;
         public string[] prerequisitos;
-        public Tuple<string, string> objetivo;//Para aquellos que utilizan instrumentacion?
+        public Tuple<string, string> objetivo;
     }
     public static Dictionary<string, Data> dicGoals = new Dictionary<string, Data>()
 	{ { Util.StrEnum(MetasAgente.Comer), 
@@ -221,8 +212,8 @@ public class DataGoals
                     objetivo = Tuple.Create(Util.StrEnum(Lugar.Cocina), Util.StrEnum(Objetivo.Estatico)),
                     rasgo = Util.StrEnum(Rasgo.Escrupuloso)} },
       { Util.StrEnum(MetasAgente.Comerciar), 
-        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteRealidad.Agente), Util.StrEnum(EstadoAgenteExistencia.Sed), Util.StrEnum(EstadoAgenteExistencia.Hambre)},
-                    prerequisitos = new string[]{Util.StrEnum(Lugar.Gremio), Util.AND, Util.StrEnum(EstadoAgenteRealidad.Recurso), Util.StrEnum(EstadoAgenteRealidad.Agente)},
+        new Data {  etiquetas = new string[]{Util.StrEnum(EstadoAgenteExistencia.Sed)},
+                    prerequisitos = new string[]{Util.StrEnum(Lugar.Gremio), Util.AND, Util.StrEnum(EstadoAgenteRealidad.Recurso), Util.NOT+Util.StrEnum(EstadoAgenteBiologico.Hidratado)},
                     objetivo = Tuple.Create(Util.StrEnum(Lugar.Gremio), Util.StrEnum(Objetivo.Estatico)),
                     rasgo = Util.StrEnum(Rasgo.Extrovertido)}}
     };
