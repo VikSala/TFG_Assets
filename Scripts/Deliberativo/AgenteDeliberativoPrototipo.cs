@@ -32,55 +32,17 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
     void OnValidate()
     {
         if(compile){
-            string laMeta = Util.StrEnum(MetasAgente.Comerciar);
+            string laMeta = Util.StrEnum(MetasAgente.Atacar);
             print("Meta " + laMeta + " tiene viabilidad: " + MetaViable(laMeta));
             compile = false;
         }
     }
 
-    protected override void IniciarDeliberacion()
+    protected override bool BioNecesidad(string etiqueta)
     {
-        metaSelected = "";
-        double result = 0; double finalResult = 0;
-
-        if(mensajeRecibido || !ejecutandoMeta || interrumpir){
-            foreach(var kv in DataGoals.dicGoals)
-            {
-                foreach(string etiqueta in kv.Value.etiquetas)
-                {
-                    if(isBreak) {isBreak = false; break;};if(interrumpir) {interrumpir = false;};
-
-                    if(listDeseos.Count == 0 || listDeseos.Contains(etiqueta))
-  
-                        if(MetaViable(kv.Key)){
-
-                            if((memoria.Contains(Util.StrEnum(EstadoAgenteBiologico.Cansado)) && etiqueta.Equals(Util.StrEnum(EstadoAgenteExistencia.Somnolencia))) ||
+        return (memoria.Contains(Util.StrEnum(EstadoAgenteBiologico.Cansado)) && etiqueta.Equals(Util.StrEnum(EstadoAgenteExistencia.Somnolencia))) ||
                                 (memoria.Contains(Util.StrEnum(EstadoAgenteBiologico.Sediento)) && etiqueta.Equals(Util.StrEnum(EstadoAgenteExistencia.Sed))) ||
-                                (memoria.Contains(Util.StrEnum(EstadoAgenteBiologico.Hambriento)) && etiqueta.Equals(Util.StrEnum(EstadoAgenteExistencia.Hambre)))) 
-                                    result = 1;
-                            else
-                                if(!Meta_.Equals(kv.Key)) result += yo.Puntua(kv.Value.rasgo, memoria)/pesoPersonalidad;
-                                else  result += yo.Puntua(kv.Value.rasgo, memoria)/(pesoPersonalidad*2);
-
-                            result += GetOntologyElement(kv.Key);
-                            result += ElementoDistancia(kv.Key);
-                            
-                            if(result > finalResult ){
-                                finalResult = result;
-                                metaSelected = kv.Key;
-                            }
-                            isBreak = true;
-                        }
-                    result = 0;
-                }
-            }
-            if(metaSelected.Equals("")){listDeseos.Clear(); print("reset"); return;}
-            if(ObjetivoTemporal!=null) ObjetivoTemporalFinal = ObjetivoTemporal;
-            ElementoDistancia(metaSelected, true);
-            GetOntologyElement(metaSelected, true);
-            IniciarMeta(metaSelected);
-        }
-        if(!metaSelected.Equals("")) print(metaSelected + ": " + finalResult);
+                                (memoria.Contains(Util.StrEnum(EstadoAgenteBiologico.Hambriento)) && etiqueta.Equals(Util.StrEnum(EstadoAgenteExistencia.Hambre)));
     }
 
     public override void NuevoEstado(string estado, bool masNecesidad)
@@ -172,8 +134,8 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
         if(isFinal) vectorObjetivo = lugarCercano;
 
         if(distanciaFinal < umbral && distanciaFinal < radio) result = 1f;//print("El objetivo a " + distanciaFinal + " metros está cerca.");
-        else if(distanciaFinal > radio && distanciaFinal > umbral) result = 0.5f;//print("El objetivo a " + distanciaFinal + " metros está lejos.");
-        else result = 0f;//print("El objetivo a " + distanciaFinal + " metros está céntrico.");
+        else if(distanciaFinal > radio && distanciaFinal > umbral) result = 0f;//print("El objetivo a " + distanciaFinal + " metros está lejos.");
+        else result = 0.5f;//print("El objetivo a " + distanciaFinal + " metros está céntrico.");
 
         return result;
     }
@@ -189,7 +151,9 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
             else if(ObjetivoRandom == Vector3.zero){
                 if(Meta_.Equals(Util.StrEnum(MetasAgente.Atacar)))
                 {
-                    finalizar = true; print("Enemigo Perdido..."); Ejecutar(); instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Clear(); return;
+                    finalizar = true; Ejecutar(); instancias[Util.StrEnum(EstadoAgenteExistencia.Amenaza)].Clear();
+                    print("Enemigo Perdido..."); 
+                    return;
                 }
                 
                 ObjetivoRandom = rps.RandomVector();

@@ -19,7 +19,7 @@ public partial class BaseDeliberativo : MonoBehaviour
     public bool ejecutandoMeta = false;
     //public int pesoPersonalidad = 1;//persValue = 2; //Si quieres un comportamiento más sólido(menos emergente o variable)
     [Tooltip("Un valor alto le da menos peso a la personalidad, lo que significa: un comportamiento más sólido(menos emergente o variable).")]
-    [Range(0.5f, 4f)]public float pesoPersonalidad = 1;
+    [Range(0.5f, 2f)]public float pesoPersonalidad = 1;
 
     //Conocimiento universal
     //Dictionary<string, DataGoals.Data> dicGoals = DataGoals.dicGoals;
@@ -51,10 +51,10 @@ public partial class BaseDeliberativo : MonoBehaviour
         InvokeRepeating("Ir", 0f, Util.frecuencia);
     }
 
-    protected virtual void IniciarDeliberacion()
+    protected void IniciarDeliberacion()
     {
         metaSelected = "";
-        double result = 0; double finalResult = 0;
+        double result, finalResult = 0;
 
         if(mensajeRecibido || !ejecutandoMeta || interrumpir){
             foreach(var kv in DataGoals.dicGoals)
@@ -63,12 +63,14 @@ public partial class BaseDeliberativo : MonoBehaviour
                 {
                     if(isBreak) {isBreak = false; break;};if(interrumpir) {interrumpir = false;};
 
-                    if(listDeseos.Count == 0 || listDeseos.Contains(etiqueta))
+                    if(listDeseos.Count == 0 || listDeseos.Contains(etiqueta)){
   
                         if(MetaViable(kv.Key)){
-                            
-                            if(!Meta_.Equals(kv.Key)) result += yo.Puntua(kv.Value.rasgo, memoria)/pesoPersonalidad;
-                            else  result += yo.Puntua(kv.Value.rasgo, memoria)/(pesoPersonalidad*2);
+                            result = 0; 
+                            if(BioNecesidad(etiqueta)) result = 1;
+                            else if(!Meta_.Equals(kv.Key)) result += yo.Puntua(kv.Value.rasgo)/pesoPersonalidad;
+                            else  result += yo.Puntua(kv.Value.rasgo)/(pesoPersonalidad*2);
+
                             result += GetOntologyElement(kv.Key);
                             result += ElementoDistancia(kv.Key);
                             
@@ -76,9 +78,10 @@ public partial class BaseDeliberativo : MonoBehaviour
                                 finalResult = result;
                                 metaSelected = kv.Key;
                             }
-                            isBreak = true;
+                            
                         }
-                    result = 0;
+                        isBreak = true;
+                    }
                 }
             }
             if(metaSelected.Equals("")){listDeseos.Clear(); print("reset"); return;}
@@ -114,6 +117,11 @@ public partial class BaseDeliberativo : MonoBehaviour
             //print("Mensaje: " + msg + " Recibido");
         }
         mensajeRecibido = false;
+    }
+
+    protected virtual bool BioNecesidad(string etiqueta)
+    {
+        return false;
     }
 
     public virtual void NuevoEstado(string estado, bool masNecesidad)
@@ -174,7 +182,6 @@ public partial class BaseDeliberativo : MonoBehaviour
         if ((instancias.TryGetValue(requisito, out container) || Util.objetoPropiedad.TryGetValue(cosa, out propiedad))
                 && instancias.TryGetValue(cosa, out container))
         {
-            //if (Util.objetoPropiedad.TryGetValue(cosa, out propiedad))
             if(requisito.Equals(propiedad) && instancias[cosa].Count != 0)
             { 
                 foreach(string objeto in instancias[cosa])
@@ -191,7 +198,7 @@ public partial class BaseDeliberativo : MonoBehaviour
 
     protected float GetOntologyElement(string meta, bool isFinal = false)
     {
-        float result = -1f; string strElement = "";
+        float result = 0f; string strElement = "";
 
         foreach(Tuple<string, float> element in DataGoals.dicGoalOntology[meta])
         {
@@ -199,10 +206,10 @@ public partial class BaseDeliberativo : MonoBehaviour
                 strElement = element.Item1;
                 result = element.Item2;
             }
-        }//print("Elemento lógico: " + strElement);
+        }
         if(isFinal) elemento = strElement;
-        if(result == -1) return 1f;
-        else return result;
+        
+        return result;
     }
 
     protected virtual float ElementoDistancia(string meta, bool isFinal = false)
@@ -310,7 +317,7 @@ public class Personalidad
         }
     }
 
-    public double Puntua(string persAtributo, HashSet<string> memoria)
+    public double Puntua(string persAtributo)
     {
         double result = 0;
         

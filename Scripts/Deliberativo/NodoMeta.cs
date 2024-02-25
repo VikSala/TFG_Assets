@@ -236,7 +236,8 @@ public class DataGoals
             Tuple.Create(Util.StrEnum(Objeto.Lanza), 1.0f),
             Tuple.Create(Util.StrEnum(EstadoAgenteExistencia.Amenaza), 1.0f)});
 
-        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Huir), new HashSet<Tuple<string, float>>(){});
+        dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Huir), new HashSet<Tuple<string, float>>(){
+            Tuple.Create(Util.StrEnum(Lugar.Gremio), 1.0f)});
 
         dicGoalElementsOntology.Add(Util.StrEnum(MetasAgente.Recolectar), new HashSet<Tuple<string, float>>(){
             Tuple.Create(Util.StrEnum(Objeto.Manos), 0.5f),
