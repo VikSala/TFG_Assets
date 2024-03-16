@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1734103451626738670}
   - component: {fileID: 3972213099390934663}
   - component: {fileID: 4033045755286242893}
+  - component: {fileID: 2099703170422582407}
   m_Layer: 0
   m_Name: Peligro
   m_TagString: Player
@@ -128,3 +129,16 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   textInCanvas: Eliminar Peligro
+--- !u!114 &2099703170422582407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8414826985841262500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6255f230e4b77143823ebf535ea7003, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toDestroy: 0

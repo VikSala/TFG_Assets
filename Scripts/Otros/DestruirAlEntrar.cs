@@ -14,11 +14,11 @@ public class DestruirAlEntrar : MonoBehaviour
         {
             // Destruir este objeto
             if(toDestroy)
-            {
+            {   
                 strName = gameObject.name;
-                if(!strName.Contains(Util.StrEnum(EstadoAgenteExistencia.Amenaza))) Destroy(gameObject);
+                if(!strName.Contains(Util.StrEnum(Percepcion.Amenaza)+"_")) Destroy(gameObject);
                 else 
-                    gameObject.name = Util.StrEnum(EstadoAgenteRealidad.Recurso) + 
+                    gameObject.name = Util.StrEnum(Percepcion.Recurso) + 
                                       "_" + Util.StrEnum(Objeto.Carne) + 
                                       strName.Substring(strName.IndexOf("_"));
             }

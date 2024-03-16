@@ -4,21 +4,21 @@ using UnityEngine;
 // Clase para manejar el estado actual y la pila de estados
 public class ControladorEstados
 {
-    private EstadoAgenteExistencia estadoActual;
-    private Stack<EstadoAgenteExistencia> pilaEstados = 
-                    new Stack<EstadoAgenteExistencia>();
-    private HashSet<EstadoAgenteExistencia> stateHashSet = 
-                    new HashSet<EstadoAgenteExistencia>();
+    private Percepcion estadoActual;
+    private Stack<Percepcion> pilaEstados = 
+                    new Stack<Percepcion>();
+    private HashSet<Percepcion> stateHashSet = 
+                    new HashSet<Percepcion>();
 
     public bool isDebug = false;
 
     public ControladorEstados(bool isDebug)
     {
         this.isDebug = isDebug;
-        estadoActual = EstadoAgenteExistencia.SinValor;
+        estadoActual = Percepcion.SinValor;
     }
 
-    public bool CambiarEstado(EstadoAgenteExistencia nuevoEstado)
+    public bool CambiarEstado(Percepcion nuevoEstado)
     {
         bool verificacion = VerificarPrioridad(nuevoEstado);
         // Verificar prioridades y duplicidad antes de cambiar el estado
@@ -31,28 +31,28 @@ public class ControladorEstados
         return verificacion;
     }
 
-    private bool VerificarPrioridad(EstadoAgenteExistencia nuevoEstado)
+    private bool VerificarPrioridad(Percepcion nuevoEstado)
     {
         switch (nuevoEstado)
         {
-            case EstadoAgenteExistencia.Hambre:
-                return estadoActual != EstadoAgenteExistencia.Peligro && 
-                estadoActual != EstadoAgenteExistencia.Amenaza && 
-                estadoActual != EstadoAgenteExistencia.Somnolencia;
+            case Percepcion.Hambre:
+                return estadoActual != Percepcion.Peligro && 
+                estadoActual != Percepcion.Amenaza && 
+                estadoActual != Percepcion.Somnolencia;
 
-            case EstadoAgenteExistencia.Sed:
-                return estadoActual != EstadoAgenteExistencia.Peligro && 
-                estadoActual != EstadoAgenteExistencia.Amenaza && 
-                estadoActual != EstadoAgenteExistencia.Somnolencia;
+            case Percepcion.Sed:
+                return estadoActual != Percepcion.Peligro && 
+                estadoActual != Percepcion.Amenaza && 
+                estadoActual != Percepcion.Somnolencia;
 
-            case EstadoAgenteExistencia.Somnolencia:
-                return estadoActual != EstadoAgenteExistencia.Peligro && 
-                estadoActual != EstadoAgenteExistencia.Amenaza;
+            case Percepcion.Somnolencia:
+                return estadoActual != Percepcion.Peligro && 
+                estadoActual != Percepcion.Amenaza;
 
-            case EstadoAgenteExistencia.Amenaza:
-                return estadoActual != EstadoAgenteExistencia.Peligro;
+            case Percepcion.Amenaza:
+                return estadoActual != Percepcion.Peligro;
 
-            case EstadoAgenteExistencia.Peligro:
+            case Percepcion.Peligro:
                 return true; // Este estado tiene la máxima prioridad
                 
             default:
@@ -70,9 +70,14 @@ public class ControladorEstados
         }
     }
 
-    public EstadoAgenteExistencia ObtenerEstadoActual()
+    public Percepcion ObtenerEstadoActual()
     {
         return estadoActual;
+    }
+
+    public bool Contiene(Percepcion estado)
+    {
+        return stateHashSet.Contains(estado);
     }
 }
 
@@ -81,14 +86,14 @@ public class AgentePushdownAutomata : MonoBehaviour
 {
     public ControladorEstados controladorEstados;
     public bool isDebug = false;
-    protected EstadoAgenteExistencia estadoActual;
+    protected Percepcion estadoActual;
 
     protected virtual void Start()
     {
         controladorEstados = new ControladorEstados(isDebug);
         estadoActual = controladorEstados.ObtenerEstadoActual();
 
-        InvokeRepeating("PercepcionExterna", 0f, Util.frecuencia-0.01f);
+        //InvokeRepeating("PercepcionExterna", 0f, Util.frecuencia*0.9f);
         
         //Iniciar percepción interna
         PercepcionInterna();
@@ -100,22 +105,22 @@ public class AgentePushdownAutomata : MonoBehaviour
         
         switch (estadoActual)
         {
-            case EstadoAgenteExistencia.SinValor:
+            case Percepcion.SinValor:
                 Util.Print("El agente no tiene necesidades específicas en este momento.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Hambre:
+            case Percepcion.Hambre:
                 Util.Print("El agente tiene hambre.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Sed:
+            case Percepcion.Sed:
                 Util.Print("El agente tiene sed.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Somnolencia:
+            case Percepcion.Somnolencia:
                 Util.Print("El agente tiene sueño.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Amenaza:
+            case Percepcion.Amenaza:
                 Util.Print("El agente detecta amenaza.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Peligro:
+            case Percepcion.Peligro:
                 Util.Print("¡El agente detecta peligro!", isDebug);
                 break;
         }
@@ -126,23 +131,23 @@ public class AgentePushdownAutomata : MonoBehaviour
     public int timeMultiplier = 1;
     void PercepcionInterna()
     {
-        InvokeRepeating("InputSed", 8f*timeMultiplier, 15f*timeMultiplier);
-        InvokeRepeating("InputHambre", 16f*timeMultiplier, 15f*timeMultiplier);
+        InvokeRepeating("InputHambre", 8f*timeMultiplier, 15f*timeMultiplier);
+        InvokeRepeating("InputSed", 16f*timeMultiplier, 15f*timeMultiplier);
         InvokeRepeating("InputSomnolencia", 30f*timeMultiplier, 30f*timeMultiplier);
     }
     protected virtual void InputSed()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Sed))
+        if(controladorEstados.CambiarEstado(Percepcion.Sed))
                 TomarDecisiones();
     }
     protected virtual void InputHambre()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre))
+        if(controladorEstados.CambiarEstado(Percepcion.Hambre))
                 TomarDecisiones();
     }
     protected virtual void InputSomnolencia()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Somnolencia))
+        if(controladorEstados.CambiarEstado(Percepcion.Somnolencia))
                 TomarDecisiones();
     }
     #endregion
@@ -197,25 +202,25 @@ public class AgentePushdownAutomata : MonoBehaviour
                             bool endInteraction = false;
                             switch (hit.collider.gameObject.name)
                             {
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Hambre)):
-                                    if(estadoActual == EstadoAgenteExistencia.Hambre) endInteraction = true;
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Hambre)):
+                                    if(estadoActual == Percepcion.Hambre) endInteraction = true;
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Sed)):
-                                    if(estadoActual == EstadoAgenteExistencia.Sed) endInteraction = true;
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Sed)):
+                                    if(estadoActual == Percepcion.Sed) endInteraction = true;
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Somnolencia)):
-                                    if (estadoActual == EstadoAgenteExistencia.Somnolencia) endInteraction = true;
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Somnolencia)):
+                                    if (estadoActual == Percepcion.Somnolencia) endInteraction = true;
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Amenaza)):
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Amenaza)):
                                     isAlerta = true;
-                                    if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Amenaza)){ 
+                                    if(controladorEstados.CambiarEstado(Percepcion.Amenaza)){ 
                                         TomarDecisiones();
                                         endInteraction = true;
                                     }
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Peligro)):
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Peligro)):
                                         isAlerta = true;
-                                        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Peligro)){ 
+                                        if(controladorEstados.CambiarEstado(Percepcion.Peligro)){ 
                                             TomarDecisiones();
                                             endInteraction = true;
                                         }

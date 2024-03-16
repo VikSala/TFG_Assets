@@ -7,7 +7,7 @@ public class RandomPlaneSpawner : MonoBehaviour
     public Transform planeToSpawnOn;
     public int numberOfObjects = 10;
     public int seed = 123;
-    public bool useSeed = false, isProtoReactivo = false;
+    public bool useSeed = true, isProtoReactivo = false;
     
     [System.NonSerialized]
     public bool doSpawn = true;
@@ -15,6 +15,7 @@ public class RandomPlaneSpawner : MonoBehaviour
 
     void Start()
     {
+        seed = Util.seed;//Random.InitState(seed);
         if(isProtoReactivo) InvokeRepeating("SpawnManager", 0f, 1f);
         else SpawnPorFrecuencia();
     }
@@ -28,8 +29,8 @@ public class RandomPlaneSpawner : MonoBehaviour
         {
             // Semilla basada en el tiempo actual
             seed = System.Environment.TickCount;
+            Random.InitState(seed);
         }
-        Random.InitState(seed);
 
         // Crear un objeto vacío como contenedor
         GameObject container = new GameObject("Contenedor");
@@ -69,8 +70,8 @@ public class RandomPlaneSpawner : MonoBehaviour
         {
             // Semilla basada en el tiempo actual
             seed = System.Environment.TickCount;
+            Random.InitState(seed);
         }
-        Random.InitState(seed);
 
         // Crear un objeto vacío como contenedor
         GameObject container = new GameObject("Contenedor");
@@ -83,7 +84,7 @@ public class RandomPlaneSpawner : MonoBehaviour
 
             // Instanciar el prefab en la posición calculada
             GameObject spawnedObject = Instantiate(prefabAmenaza, spawnPosition, Quaternion.identity);
-            spawnedObject.name = "Amenaza";
+            spawnedObject.name = Util.StrEnum(Percepcion.Amenaza);
             spawnedObject.transform.parent = container.transform;
         }
 
@@ -91,7 +92,7 @@ public class RandomPlaneSpawner : MonoBehaviour
         Vector3 enemyPosition = RandomVector();
         
         GameObject enemyObject = Instantiate(prefabPeligro, enemyPosition, Quaternion.identity);
-        enemyObject.name = "Peligro";
+        enemyObject.name = Util.StrEnum(Percepcion.Peligro);
         enemyObject.transform.parent = container.transform;
     }
 

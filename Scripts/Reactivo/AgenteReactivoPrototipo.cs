@@ -4,7 +4,7 @@ using UnityEngine;
 public class AgenteReactivoPrototipo : AgentePushdownAutomata
 {
     public NavMeshAgent navMeshAgent;
-    EstadoAgenteExistencia estadoAnterior;
+    Percepcion estadoAnterior;
     public GameObject Hambre, Sed, Somnolencia;
     public RandomPlaneSpawner rps;
     bool desactivarAmenaza = false;
@@ -12,9 +12,10 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
     protected override void Start()
     {
         base.Start();
+        InvokeRepeating("PercepcionExterna", 0f, 0.25f);
         
         //Iniciar con comer
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre))
+        if(controladorEstados.CambiarEstado(Percepcion.Hambre))
                 TomarDecisiones(Hambre.transform.position);
     }
 
@@ -25,25 +26,25 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
         
         switch (estadoActual)
         {
-            case EstadoAgenteExistencia.SinValor:
+            case Percepcion.SinValor:
                 Util.Print("El agente no tiene necesidades específicas en este momento.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Hambre:
+            case Percepcion.Hambre:
                 targetPosition = Hambre.transform.position;
                 navMeshAgent.SetDestination(targetPosition); Util.Print("El agente tiene hambre.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Sed:
+            case Percepcion.Sed:
                 targetPosition = Sed.transform.position;
                 navMeshAgent.SetDestination(targetPosition); Util.Print("El agente tiene sed.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Somnolencia:
+            case Percepcion.Somnolencia:
                 targetPosition = Somnolencia.transform.position;
                 navMeshAgent.SetDestination(targetPosition); Util.Print("El agente tiene sueño.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Amenaza:
+            case Percepcion.Amenaza:
                 navMeshAgent.SetDestination(targetPosition); Util.Print("El agente detecta amenaza.", isDebug);
                 break;
-            case EstadoAgenteExistencia.Peligro:
+            case Percepcion.Peligro:
                 navMeshAgent.SetDestination(targetPosition); Util.Print("¡El agente detecta peligro!", isDebug);
                 break;
         }
@@ -52,17 +53,17 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
     //PERCEPCION INTERNA
     protected override void InputSed()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Sed))
+        if(controladorEstados.CambiarEstado(Percepcion.Sed))
                 TomarDecisiones(Sed.transform.position);
     }
     protected override void InputHambre()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Hambre))
+        if(controladorEstados.CambiarEstado(Percepcion.Hambre))
                 TomarDecisiones(Hambre.transform.position);
     }
     protected override void InputSomnolencia()
     {
-        if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Somnolencia))
+        if(controladorEstados.CambiarEstado(Percepcion.Somnolencia))
                 TomarDecisiones(Somnolencia.transform.position);
     }
     
@@ -70,7 +71,7 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
     protected override void PercepcionExterna() {
         Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
 
-        if(estadoActual != estadoAnterior && (int)estadoActual < (int)EstadoAgenteExistencia.Amenaza)//estadoActual != EstadoAgenteExistencia.Amenaza)//
+        if(estadoActual != estadoAnterior && (int)estadoActual < (int)Percepcion.Amenaza)//estadoActual != Percepcion.Amenaza)//
             TomarDecisiones(new Vector3());
 
         foreach (Collider collider in colliders) {
@@ -92,38 +93,38 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
                             bool endInteraction = false;
                             switch (hit.collider.gameObject.name)
                             {
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Hambre)):
-                                    if(estadoActual == EstadoAgenteExistencia.Hambre) endInteraction = true;
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Hambre)):
+                                    if(estadoActual == Percepcion.Hambre) endInteraction = true;
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Sed)):
-                                    if(estadoActual == EstadoAgenteExistencia.Sed) endInteraction = true;
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Sed)):
+                                    if(estadoActual == Percepcion.Sed) endInteraction = true;
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Somnolencia)):
-                                    if (estadoActual == EstadoAgenteExistencia.Somnolencia){
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Somnolencia)):
+                                    if (estadoActual == Percepcion.Somnolencia){
                                         endInteraction = true;
                                         rps.doSpawn = true;
                                     }
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Amenaza)):
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Amenaza)):
                                     isAlerta = true;
-                                    if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Amenaza)){ 
+                                    if(controladorEstados.CambiarEstado(Percepcion.Amenaza)){ 
                                         TomarDecisiones(hit.collider.gameObject.transform.position);
                                         desactivarAmenaza = true;
                                     }
-                                    if (desactivarAmenaza && Physics.Raycast(transform.position, playerDirection, out hit, 0.85f)){
-                                        if(hit.collider.gameObject.name.Equals(Util.StrEnum(EstadoAgenteExistencia.Amenaza))) Destroy(hit.collider.gameObject);
+                                    if (desactivarAmenaza){
+                                        if(hit.collider.gameObject.name.Equals(Util.StrEnum(Percepcion.Amenaza))) hit.collider.gameObject.GetComponent<DestruirAlEntrar>().toDestroy = true;//Destroy(hit.collider.gameObject);
                                         desactivarAmenaza = false;
                                         endInteraction = true;
                                     }   
                                     break;
-                                case string a when a.Equals(Util.StrEnum(EstadoAgenteExistencia.Peligro)):
+                                case string a when a.Equals(Util.StrEnum(Percepcion.Peligro)):
                                     isAlerta = true;
-                                    if(controladorEstados.CambiarEstado(EstadoAgenteExistencia.Peligro)){ 
+                                    if(controladorEstados.CambiarEstado(Percepcion.Peligro)){ 
                                         TomarDecisiones(hit.collider.gameObject.transform.position);
                                         desactivarAmenaza = true;
                                     }
-                                    if (desactivarAmenaza && Physics.Raycast(transform.position, playerDirection, out hit, 0.85f)){
-                                        if(hit.collider.gameObject.name.Equals(Util.StrEnum(EstadoAgenteExistencia.Peligro))) Destroy(hit.collider.gameObject);
+                                    if (desactivarAmenaza){
+                                        if(hit.collider.gameObject.name.Equals(Util.StrEnum(Percepcion.Peligro))) hit.collider.gameObject.GetComponent<DestruirAlEntrar>().toDestroy = true;//Destroy(hit.collider.gameObject);
                                         desactivarAmenaza = false;
                                         endInteraction = true;
                                     }   

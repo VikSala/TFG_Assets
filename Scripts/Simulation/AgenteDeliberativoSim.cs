@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-public class AgenteDeliberativoPrototipo : BaseDeliberativo
+public class AgenteDeliberativoSim : BaseDeliberativo
 {
     public bool compile = false;
     protected override void Awake()
@@ -12,7 +12,7 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
         
         memoria = new HashSet<string>
         {Util.StrEnum(Objeto.Manos), Util.StrEnum(Objeto.Azada), Util.StrEnum(Objeto.Agua), Util.StrEnum(Objeto.Lanza),
-         Util.StrEnum(Objeto.Carne), Util.StrEnum(Lugar.Gremio), Util.StrEnum(Percepcion.Recurso), 
+         Util.StrEnum(Objeto.Carne), Util.StrEnum(Lugar.Gremio), Util.StrEnum(Lugar.Lago), Util.StrEnum(Percepcion.Recurso), 
          Util.StrEnum(Objeto.Baya), Util.StrEnum(Estado.SinHambre), Util.StrEnum(Estado.SinSed),
          Util.StrEnum(Estado.Descansado), Util.StrEnum(Percepcion.Amenaza)};
 
@@ -26,6 +26,7 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
         {Util.StrEnum(Percepcion.Recurso), new HashSet<string>{"Agua", "Carne", "Baya"}},
         {Util.StrEnum(Lugar.Gremio), new HashSet<string>{"Gremio_1", "Gremio_2"}},
         {Util.StrEnum(Lugar.Cocina), new HashSet<string>{"Cocina_1"}},
+        {Util.StrEnum(Lugar.Lago), new HashSet<string>{}},//"Lago_1"
         {Util.StrEnum(Percepcion.Amenaza), new HashSet<string>{}}//Amenaza_Oso_1, Amenaza_Pollo_1
         };
     }
@@ -75,6 +76,7 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
             }else{
                 memoria.Remove(strCon);
                 memoria.Add(strNecesitado); //print(strNecesitado);
+                //newMessage(estado);
             }
         }else{
             if(memoria.Contains(strCon)){
@@ -89,8 +91,6 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                 memoria.Add(strSatisfecho); //print(strSatisfecho);
             }
         }
-
-        if(!strNecesitado.Equals("")) newMessage(strNecesitado);
     }
 
     protected override float ElementoDistancia(string meta, bool isFinal = false)
@@ -309,7 +309,27 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                     ejecutandoMeta = false;
                 }
                 break;
+            case string a when a.Equals(Util.StrEnum(Meta.IrLago)):
+                navegar = true;
+                if(finalizar) 
+                {
+                    navegar = false;
+                    string nuevaBebida = Util.StrEnum(Objeto.Agua)+instancias[Util.StrEnum(Objeto.Agua)].Count();
+                    instancias[Util.StrEnum(Objeto.Agua)].Add(nuevaBebida);
+                    instancias[Util.StrEnum(Percepcion.Recurso)].Add(Util.StrEnum(Objeto.Agua));
+                    //BEBER
+                    Util.Print("Beber en el lago", isDebug);
+                    instancias[Util.StrEnum(Objeto.Agua)].Remove(nuevaBebida);
+                    if(instancias[Util.StrEnum(Objeto.Agua)].Count == 0) 
+                        instancias[Util.StrEnum(Percepcion.Recurso)].Remove(Util.StrEnum(Objeto.Agua));
+                    NuevoEstado(Util.StrEnum(Percepcion.Sed), false);
+                    //END BEBER
+                    finalizar = false;
+                    ejecutandoMeta = false;
+                }
+                break;
         }
         
     } 
+    
 }
