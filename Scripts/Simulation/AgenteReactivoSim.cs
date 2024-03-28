@@ -19,7 +19,7 @@ public class AgenteReactivoSim : AgentePushdownAutomata
 
     void TomarDecisiones(GameObject target)
     {
-        estadoActual = controladorEstados.ObtenerEstadoActual(); //print("Estado actual: " + Util.strEnumExistencia[(int)estadoActual]);
+        estadoActual = controladorEstados.ObtenerEstadoActual(); 
         if(target!=null)
         {
             AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().ObjetivoTemporal = target;
@@ -100,8 +100,6 @@ public class AgenteReactivoSim : AgentePushdownAutomata
                                     break;
                                 case string a when a.Contains(Util.StrEnum(Percepcion.Recurso)):
                                     AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().ObjetivoTemporal = hit.collider.gameObject;
-                                    //controladorEstados.FinalizarEstadoActual();
-                                    //estadoActual = controladorEstados.ObtenerEstadoActual();
                                     break;
                                 case string a when Util.strEnumLugar.Contains(nameID.Split("_")[0]):
                                     if(!AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().instancias[nameID.Split("_")[0]].Contains(nameID))

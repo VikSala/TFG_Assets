@@ -40,8 +40,8 @@ public enum Objeto
 {
     SinValor,
     Manos,
-    Azada,
-    Lanza,
+    Hoz,
+    Espada,
     Carne,
     Baya,
     Agua

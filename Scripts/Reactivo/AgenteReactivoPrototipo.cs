@@ -112,7 +112,7 @@ public class AgenteReactivoPrototipo : AgentePushdownAutomata
                                         desactivarAmenaza = true;
                                     }
                                     if (desactivarAmenaza){
-                                        if(hit.collider.gameObject.name.Equals(Util.StrEnum(Percepcion.Amenaza))) hit.collider.gameObject.GetComponent<DestruirAlEntrar>().toDestroy = true;//Destroy(hit.collider.gameObject);
+                                        if(hit.collider.gameObject.name.Equals(Util.StrEnum(Percepcion.Amenaza))) hit.collider.gameObject.GetComponent<DestruirAlEntrar>().toDestroy = true;
                                         desactivarAmenaza = false;
                                         endInteraction = true;
                                     }   

@@ -72,9 +72,12 @@ public class AgenteReactivoFinal : AgentePushdownAutomata
     protected override void PercepcionExterna() {
         Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
 
+        //if(estadoActual != estadoAnterior && (int)estadoActual < (int)Percepcion.Amenaza)
+            //TomarDecisiones(null);
+
         foreach (Collider collider in colliders) {
 
-            if (collider.CompareTag("Player")) {
+            if (collider.CompareTag(Util.StrEnum(Entidad.Player))) {
                 
                 Vector3 playerDirection = (collider.transform.position - transform.position).normalized;
                 float dotProduct = Vector3.Dot(transform.forward, playerDirection)*1.9f;
@@ -85,7 +88,7 @@ public class AgenteReactivoFinal : AgentePushdownAutomata
                     
                     RaycastHit hit;
                     if (Physics.Raycast(transform.position, playerDirection, out hit, perceptionRadius)) {
-                        if (hit.collider.CompareTag("Player")) {
+                        if (hit.collider.CompareTag(Util.StrEnum(Entidad.Player))) {
                             
                             bool endInteraction = false;
                             switch (hit.collider.gameObject.name)

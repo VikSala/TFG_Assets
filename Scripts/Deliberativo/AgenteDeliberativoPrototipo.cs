@@ -11,15 +11,15 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
         base.Awake();
         
         memoria = new HashSet<string>
-        {Util.StrEnum(Objeto.Manos), Util.StrEnum(Objeto.Azada), Util.StrEnum(Objeto.Agua), Util.StrEnum(Objeto.Lanza),
+        {Util.StrEnum(Objeto.Manos), Util.StrEnum(Objeto.Hoz), Util.StrEnum(Objeto.Agua), Util.StrEnum(Objeto.Espada),
          Util.StrEnum(Objeto.Carne), Util.StrEnum(Lugar.Gremio), Util.StrEnum(Percepcion.Recurso), 
          Util.StrEnum(Objeto.Baya), Util.StrEnum(Estado.SinHambre), Util.StrEnum(Estado.SinSed),
          Util.StrEnum(Estado.Descansado), Util.StrEnum(Percepcion.Amenaza)};
 
         instancias = new Dictionary<string, HashSet<string>>(){
         {Util.StrEnum(Objeto.Manos), new HashSet<string>{"Mis Manos"}},
-        {Util.StrEnum(Objeto.Azada), new HashSet<string>{"Azada_1"}},
-        {Util.StrEnum(Objeto.Lanza), new HashSet<string>{"Lanza_1"}},
+        {Util.StrEnum(Objeto.Hoz), new HashSet<string>{"Hoz_1"}},
+        {Util.StrEnum(Objeto.Espada), new HashSet<string>{"Espada_1"}},
         {Util.StrEnum(Objeto.Agua), new HashSet<string>{"Agua_1"}},//Lago_2//"Agua_1"
         {Util.StrEnum(Objeto.Carne), new HashSet<string>{"Carne_1"}},
         {Util.StrEnum(Objeto.Baya), new HashSet<string>{"Baya_1"}},//Huerto_1

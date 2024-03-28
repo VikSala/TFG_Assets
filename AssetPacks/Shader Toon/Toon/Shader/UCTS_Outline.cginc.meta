@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: ec7b5c1d006f6be49b412bcd7a789c78
+timeCreated: 1486305225
+licenseType: Store
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267370
+  packageName: 3D Anime Game _ Character Male
+  packageVersion: 1.0
+  assetPath: Assets/Toon/Shader/UCTS_Outline.cginc
+  uploadId: 628890

@@ -9,8 +9,8 @@ public partial class Util : MonoBehaviour
     { return
         new Dictionary<string, string>(){ 
             { StrEnum(Objeto.Manos), StrEnum(Tipo.Herramienta) },
-            { StrEnum(Objeto.Azada), StrEnum(Tipo.Herramienta) },
-            { StrEnum(Objeto.Lanza), StrEnum(Tipo.Herramienta) },
+            { StrEnum(Objeto.Hoz), StrEnum(Tipo.Herramienta) },
+            { StrEnum(Objeto.Espada), StrEnum(Tipo.Herramienta) },
             { StrEnum(Objeto.Carne), StrEnum(Tipo.Comida) },
             { StrEnum(Objeto.Baya), StrEnum(Tipo.Comida) },
             { StrEnum(Objeto.Agua), StrEnum(Tipo.Bebida) }

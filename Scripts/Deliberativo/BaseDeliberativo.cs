@@ -12,11 +12,12 @@ public partial class BaseDeliberativo : MonoBehaviour
 
     [NonSerialized]
     public GameObject ObjetivoTemporal, ObjetivoTemporalFinal;
+    protected GameObject Elemento_, ElementoTemporal;
     protected Personalidad yo;    string elemento = ""; protected Vector3 vectorObjetivo;// = Vector3.zero; //NodoMeta nodoMeta; 
     //EstadoAgenteBiologico estadoAgente = EstadoAgenteBiologico.SinValor;
     public LugarManager lugarManager;
     protected string metaSelected = "";
-    protected bool mensajeRecibido = false; 
+    protected bool mensajeRecibido = false, destinoAlcanzado = false; 
     [NonSerialized]
     public bool ejecutandoMeta = false;
     //public int pesoPersonalidad = 1;//persValue = 2; //Si quieres un comportamiento más sólido(menos emergente o variable)
@@ -50,7 +51,7 @@ public partial class BaseDeliberativo : MonoBehaviour
         GetComponent<DatosEntidad>().RasgosPersonalidad = new List<string>(yo.myPersAttributes.Split(",", StringSplitOptions.RemoveEmptyEntries));
     }
 
-    void Start()
+    protected virtual void Start()
     {
         InvokeRepeating("IniciarDeliberacion", 0f, frecuencia);
         InvokeRepeating("Ir", 0f, frecuencia);
@@ -66,7 +67,7 @@ public partial class BaseDeliberativo : MonoBehaviour
             {
                 foreach(string etiqueta in kv.Value.etiquetas)
                 {
-                    if(isBreak) {isBreak = false; break;};if(interrumpir) {interrumpir = false;};
+                    if(interrumpir) {interrumpir = false;};
 
                     if(listDeseos.Count == 0 || listDeseos.Contains(etiqueta)){
   
@@ -83,10 +84,11 @@ public partial class BaseDeliberativo : MonoBehaviour
                                 finalResult = result;
                                 metaSelected = kv.Key;
                             }
-                            
                         }
                         isBreak = true;
                     }
+                    
+                    if(isBreak) {isBreak = false; break;};
                 }
             }
             if(metaSelected.Equals("")){listDeseos.Clear();  GetComponent<DatosEntidad>().Resets++; return;}//Util.Print("Reset: " + nombreAgente, true);
@@ -95,22 +97,23 @@ public partial class BaseDeliberativo : MonoBehaviour
             GetOntologyElement(metaSelected, true);
             IniciarMeta(metaSelected);
         }
-        if(!metaSelected.Equals("")) Util.Print(metaSelected + ": " + finalResult, isDebug);
+        if(!metaSelected.Equals("")) Util.Print(metaSelected + ": " + finalResult, isDebug);// && !ejecutandoMeta
     }
 
     public void IniciarMeta(string meta)
     {
-        foreach(string etiqueta in DataMeta.dicGoals[metaSelected].etiquetas) 
+        /*foreach(string etiqueta in DataMeta.dicGoals[metaSelected].etiquetas) 
             if(listDeseos.Contains(etiqueta))
             {
                 listDeseos.Remove(etiqueta);
                 break;
-            }
+            }*/
 
         Meta_ = meta;
         Objeto_ = elemento;
         Objetivo_ = vectorObjetivo;
-        ObjetivoTemporal = null; 
+        Elemento_ = ElementoTemporal;
+        ObjetivoTemporal = null; destinoAlcanzado = false;
         Ejecutar();
     }
 
@@ -149,7 +152,7 @@ public partial class BaseDeliberativo : MonoBehaviour
     {
         bool result = false; bool and = false;
 
-        foreach(string requisito in DataMeta.dicGoals[meta].prerequisitos)
+        foreach(string requisito in DataMeta.dicGoals[meta].prerrequisitos)
         {
             foreach(string cosa in memoria)
             {

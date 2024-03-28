@@ -14,8 +14,15 @@ public partial class Util : MonoBehaviour
         if(!useSeed) semilla = Environment.TickCount;
         seed = semilla;//1886060671;//Environment.TickCount;
         UnityEngine.Random.InitState(seed);//print("Seed: " + seed);
-        frecuencia = UnityEngine.Random.Range(0f, 0.25f);//print("frecuencia: " + frecuencia);
+        //frecuencia = UnityEngine.Random.Range(0f, 0.25f);//print("frecuencia: " + frecuencia);
     }
 
     public static void Print(string msg, bool debugMsg = true){ if(debugMsg) Debug.Log(msg); }
+}
+
+public enum Tiempo
+{
+    Corto = 1,
+    Medio = 3,
+    Largo = 6
 }
