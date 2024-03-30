@@ -153,9 +153,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
 
     protected override void Ir()
     {
-        bool objetivoDetectado = false;
-
-        if(ObjetivoTemporal != null)//Meta_.Equals(Util.StrEnum(Meta.Recolectar)) && 
+        if(ObjetivoTemporal != null)
             if(ObjetivoTemporal.name.Contains(Util.StrEnum(Percepcion.Recurso)) || ObjetivoTemporal.name.Contains(Util.StrEnum(Percepcion.Amenaza)))
                 {
                     interrumpir = true; 
@@ -166,11 +164,11 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 }
         if(navegar && !finalizar)
         {
-            if(Objetivo_ != Vector3.zero){ navMeshAgent.SetDestination(Objetivo_); objetivoDetectado = true;}
+            if(Objetivo_ != Vector3.zero) navMeshAgent.SetDestination(Objetivo_);
             else if(ObjetivoRandom == Vector3.zero){
                 if(Meta_.Equals(Util.StrEnum(Meta.Atacar)))
                 {
-                    finalizar = true; //Ejecutar(); 
+                    finalizar = true;
                     Ejecutar();
                     Util.Print("Enemigo Perdido...", true); if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
                     instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); 
@@ -182,23 +180,15 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 navMeshAgent.SetDestination(ObjetivoRandom);
             }
 
-            /*if(objetivoDetectado && ObjetivoTemporalFinal == null && DataMeta.dicGoals[Meta_].objetivo.Item2.Equals(Util.StrEnum(Objetivo.Dinamico)))
-            {
-                finalizar = true; 
-                Ejecutar();
-                Util.Print("Objetivo Perdido...", true);
-                return;
-            }*/
-
             if (navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance && !navMeshAgent.pathPending){
                 finalizar = true;
-                destinoAlcanzado = true;//!destinoAlcanzado && 
+                destinoAlcanzado = true;
                 ObjetivoRandom = Vector3.zero;
                 Ejecutar();
             } 
             else 
             {
-                if(Meta_.Equals(Util.StrEnum(Meta.Atacar)) && isAnimator) GetComponent<AnimChangerLayer>().Animar("Correr", AnimChangerLayer.Layer.Abajo);
+                if(Meta_.Equals(Util.StrEnum(Meta.Atacar)) && isAnimator) GetComponent<AnimChangerLayer>().Animar("Correr", AnimChangerLayer.Layer.Inferior);
                 else if(Meta_.Equals(Util.StrEnum(Meta.Huir)) && isAnimator)
                     GetComponent<AnimChangerLayer>().Animar("Correr", AnimChangerLayer.Layer.Base);
                 else
@@ -215,12 +205,12 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         switch (Meta_)
         {
             case string a when a.Equals(Util.StrEnum(Meta.Comer)):
-                if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Arriba);
+                if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Superior);
                 if(ejecutandoEfecto) Efecto();
                 else Invoke("EjecutarEfecto", (float)Tiempo.Corto);
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Beber)):
-                if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Arriba);
+                if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Superior);
                 if(ejecutandoEfecto) Efecto();
                 else Invoke("EjecutarEfecto", (float)Tiempo.Corto);
                 break;
@@ -249,7 +239,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                         instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
                         finalizar = false;
                         ejecutandoMeta = false;
-                        IniciarDeliberacion();//if(destinoAlcanzado) IniciarDeliberacion();
+                        IniciarDeliberacion();
                         if(metaSelected.Equals("")) IniciarDeliberacion();
                     }
                     
@@ -279,7 +269,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     else{
                         finalizar = false;
                         ejecutandoMeta = false;
-                        IniciarDeliberacion();//if(destinoAlcanzado) IniciarDeliberacion();
+                        IniciarDeliberacion();
                         if(metaSelected.Equals("")) IniciarDeliberacion();
                     }
                 }
@@ -289,7 +279,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 if(finalizar) 
                 {
                     navegar = false;
-                    if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Arriba);
+                    if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Superior);
                     if(ejecutandoEfecto) Efecto();
                     else Invoke("EjecutarEfecto", (float)Tiempo.Medio);
                 }
@@ -299,7 +289,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 if(finalizar) 
                 {
                     navegar = false;
-                    if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Arriba);
+                    if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Superior);
                     if(ejecutandoEfecto) Efecto();
                     else Invoke("EjecutarEfecto", (float)Tiempo.Medio);
                 }
@@ -446,11 +436,6 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         finalizar = false;
         ejecutandoMeta = false;
         ejecutandoEfecto = false;
-
-        //Meta_ = "";
-        //Objeto_ = "";
-        //Objetivo_ = Vector3.zero;
-        //Elemento_ = null;
     }
     
 }
