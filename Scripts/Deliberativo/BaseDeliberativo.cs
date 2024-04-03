@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.AI;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(DatosEntidad))]
@@ -7,23 +8,25 @@ public partial class BaseDeliberativo : MonoBehaviour
 {
     protected HashSet<string> listDeseos = new HashSet<string>{};
     public bool isDebug = false;
-    //string metaActual = Util.StrEnum(MetasAgente.SinValor);//Util.StrEnum(MetasAgente.Comerciar);
-    protected bool isBreak = false, interrumpir = false;
+    protected bool isBreak = false;
 
     [NonSerialized]
     public GameObject ObjetivoTemporal, ObjetivoTemporalFinal;
     protected GameObject Elemento_, ElementoTemporal;
-    protected Personalidad yo;    string elemento = ""; protected Vector3 vectorObjetivo;// = Vector3.zero; //NodoMeta nodoMeta; 
-    //EstadoAgenteBiologico estadoAgente = EstadoAgenteBiologico.SinValor;
+    protected Personalidad yo;    string elemento = ""; protected Vector3 vectorObjetivo;
     public LugarManager lugarManager;
     protected string metaSelected = "";
-    protected bool mensajeRecibido = false, destinoAlcanzado = false; 
-    [NonSerialized]
-    public bool ejecutandoMeta = false;
-    //public int pesoPersonalidad = 1;//persValue = 2; //Si quieres un comportamiento más sólido(menos emergente o variable)
+    protected bool mensajeRecibido = false;
+    
     [Tooltip("Un valor alto le da menos peso a la personalidad, lo que significa: un comportamiento más sólido(menos emergente o variable).")]
     [Range(0.5f, 2f)]public float pesoPersonalidad = 1;
-    public float frecuencia;
+    protected float frecuencia;
+
+    protected string Objeto_; protected Vector3 Objetivo_, ObjetivoRandom = Vector3.zero;
+    protected string Meta_ = Util.StrEnum(Meta.SinValor);
+    protected bool navegar = false, finalizar = false;
+    public RandomPlaneSpawner rps;
+    public NavMeshAgent navMeshAgent;
 
     //Conocimiento universal
     //Dictionary<string, DataMeta.Data> dicGoals = DataMeta.dicGoals;
@@ -51,9 +54,9 @@ public partial class BaseDeliberativo : MonoBehaviour
         GetComponent<DatosEntidad>().RasgosPersonalidad = new List<string>(yo.myPersAttributes.Split(",", StringSplitOptions.RemoveEmptyEntries));
     }
 
-    protected virtual void Start()
+    void Start()//protected virtual 
     {
-        InvokeRepeating("IniciarDeliberacion", 0f, frecuencia);
+        //IniciarDeliberacion();//InvokeRepeating("IniciarDeliberacion", 0f, frecuencia);
         InvokeRepeating("Ir", 0f, frecuencia);
     }
 
@@ -62,12 +65,12 @@ public partial class BaseDeliberativo : MonoBehaviour
         metaSelected = "";
         double result, finalResult = 0;
 
-        if(mensajeRecibido || !ejecutandoMeta || interrumpir){
+        if(mensajeRecibido|| !finalizar){// || !ejecutandoMeta || interrumpir){
             foreach(var kv in DataMeta.dicGoals)
             {
                 foreach(string etiqueta in kv.Value.etiquetas)
                 {
-                    if(interrumpir) {interrumpir = false;};
+                    //if(interrumpir) {interrumpir = false;};
 
                     if(listDeseos.Count == 0 || listDeseos.Contains(etiqueta)){
   
@@ -97,7 +100,7 @@ public partial class BaseDeliberativo : MonoBehaviour
             GetOntologyElement(metaSelected, true);
             IniciarMeta(metaSelected);
         }
-        if(!metaSelected.Equals("")) Util.Print(metaSelected + ": " + finalResult, isDebug);// && !ejecutandoMeta
+        if(!metaSelected.Equals("")) Util.Print(metaSelected + ": " + finalResult, isDebug);
     }
 
     public void IniciarMeta(string meta)
@@ -113,7 +116,7 @@ public partial class BaseDeliberativo : MonoBehaviour
         Objeto_ = elemento;
         Objetivo_ = vectorObjetivo;
         Elemento_ = ElementoTemporal;
-        ObjetivoTemporal = null; destinoAlcanzado = false;
+        ObjetivoTemporal = null; //destinoAlcanzado = false;
         Ejecutar();
     }
 
@@ -122,6 +125,8 @@ public partial class BaseDeliberativo : MonoBehaviour
         if(!listDeseos.Contains(msg)){
             listDeseos.Add(msg);
             mensajeRecibido = true;
+            IniciarDeliberacion();
+            if(metaSelected.Equals("")) IniciarDeliberacion();
         }
         mensajeRecibido = false;
     }
@@ -239,6 +244,40 @@ public partial class BaseDeliberativo : MonoBehaviour
         return 0.5f;
     }
 
+    protected virtual void Ejecutar()
+    {
+        //ejecutandoMeta = true;
+
+        switch (Meta_)
+        {
+            default:
+                Util.Print(Meta_, isDebug);
+                break;
+        }
+        //ejecutandoMeta = false;
+        IniciarDeliberacion();
+        if(metaSelected.Equals("")) IniciarDeliberacion();
+    }
+
+    protected virtual void Ir()
+    {
+        if(navegar && !finalizar)
+        {
+            if(Objetivo_ != Vector3.zero) navMeshAgent.SetDestination(Objetivo_);
+            else if(ObjetivoRandom == Vector3.zero){
+                ObjetivoRandom = rps.RandomVector();
+                navMeshAgent.SetDestination(ObjetivoRandom);
+                //print("Explorar coordenada...");
+            }
+
+            if (navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance && !navMeshAgent.pathPending){
+                finalizar = true;
+                ObjetivoRandom = Vector3.zero;
+                Ejecutar();
+            }
+                
+        }
+    }
 }
 
 

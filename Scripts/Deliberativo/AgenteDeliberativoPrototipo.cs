@@ -89,8 +89,6 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                 memoria.Add(strSatisfecho); //print(strSatisfecho);
             }
         }
-
-        if(!strNecesitado.Equals("")) newMessage(strNecesitado);
     }
 
     protected override float ElementoDistancia(string meta, bool isFinal = false)
@@ -145,18 +143,17 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
     {
         bool objetivoDetectado = false;
 
-        if(Meta_.Equals(Util.StrEnum(Meta.Recolectar)) && ObjetivoTemporal != null)
-            if(ObjetivoTemporal.name.Contains(Util.StrEnum(Percepcion.Recurso)) || ObjetivoTemporal.name.Contains(Util.StrEnum(Percepcion.Amenaza)))
-                {interrumpir = true;}
         if(navegar && !finalizar)
         {
             if(Objetivo_ != Vector3.zero){ navMeshAgent.SetDestination(Objetivo_); objetivoDetectado = true;}
             else if(ObjetivoRandom == Vector3.zero){
                 if(Meta_.Equals(Util.StrEnum(Meta.Atacar)))
                 {
-                    finalizar = true; //Ejecutar(); instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
+                    finalizar = true; 
                     Ejecutar();
-                    Util.Print("Enemigo Perdido...", true);
+                    Util.Print("Enemigo Perdido...", isDebug);
+                    instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); 
+                    //IniciarDeliberacion();
                     return;
                 }
                 
@@ -168,7 +165,7 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
             {
                 finalizar = true; 
                 Ejecutar();
-                Util.Print("Objetivo Perdido...", true);
+                Util.Print("Objetivo Perdido...", isDebug);//Tras recolectar, el reactivo lo detecta y entra aqui
                 return;
             }
 
@@ -183,8 +180,6 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
 
     protected override void Ejecutar()
     {
-        ejecutandoMeta = true;
-
         switch (Meta_)
         {
             case string a when a.Equals(Util.StrEnum(Meta.Comer)):
@@ -195,7 +190,9 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                 NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
                 if(Objeto_.Equals(Util.StrEnum(Objeto.Carne)))
                     NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
-                ejecutandoMeta = false;
+                if(listDeseos.Contains(Util.StrEnum(Percepcion.Hambre))) listDeseos.Remove(Util.StrEnum(Percepcion.Hambre));
+                IniciarDeliberacion();
+                if(metaSelected.Equals("")) IniciarDeliberacion();
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Beber)):
                 Util.Print("Beber", isDebug);
@@ -203,7 +200,9 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                 if(instancias[Objeto_].Count == 0) 
                     instancias[Util.StrEnum(Percepcion.Recurso)].Remove(Objeto_);
                 NuevoEstado(Util.StrEnum(Percepcion.Sed), false);
-                ejecutandoMeta = false;
+                if(listDeseos.Contains(Util.StrEnum(Percepcion.Sed))) listDeseos.Remove(Util.StrEnum(Percepcion.Sed));
+                IniciarDeliberacion();
+                if(metaSelected.Equals("")) IniciarDeliberacion();
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Dormir)):
                 navegar = true;
@@ -212,11 +211,11 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                     navegar = false;
                     NuevoEstado(Util.StrEnum(Percepcion.Somnolencia), false);
                     Util.Print("Dormir", isDebug);
-                    ObjetivoTemporalFinal = null; //ObjetivoTemporal = null; 
+                    ObjetivoTemporalFinal = null;
                     instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
-                    rps.SpawnPorFrecuencia();
-                    finalizar = false;
-                    ejecutandoMeta = false;
+                    rps.SpawnFrecuencia();
+                    
+                    if(listDeseos.Contains(Util.StrEnum(Percepcion.Somnolencia))) listDeseos.Remove(Util.StrEnum(Percepcion.Somnolencia));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Atacar)):
@@ -229,9 +228,9 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                         ObjetivoTemporalFinal.GetComponent<DestruirAlEntrar>().toDestroy = true;
                         Util.Print("Atacar", isDebug);
                     }
-                    instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); //ObjetivoTemporal = null; //ObjetivoTemporalFinal=null; 
-                    finalizar = false;
-                    ejecutandoMeta = false;
+                    instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
+                    
+                    if(listDeseos.Contains(Util.StrEnum(Percepcion.Amenaza))) listDeseos.Remove(Util.StrEnum(Percepcion.Amenaza));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Huir)):
@@ -239,10 +238,10 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                 if(finalizar) 
                 {
                     navegar = false;
-                    instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); //ObjetivoTemporal = null;
+                    instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
                     Util.Print("Huir", isDebug);
-                    finalizar = false;
-                    ejecutandoMeta = false;
+                    
+                    if(listDeseos.Contains(Util.StrEnum(Percepcion.Amenaza))) listDeseos.Remove(Util.StrEnum(Percepcion.Amenaza));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Recolectar)):
@@ -260,10 +259,7 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                             ObjetivoTemporalFinal.GetComponent<DestruirAlEntrar>().toDestroy = true;
                             Util.Print("Recolectar: " + instancia, isDebug);
                         }
-                        //ObjetivoTemporal = null; //ObjetivoTemporalFinal = null;
                     }
-                    finalizar = false;
-                    ejecutandoMeta = false;
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Cocinar)):
@@ -272,7 +268,7 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                 {
                     navegar = false;
                     Util.Print("Cocinar", isDebug);
-                    finalizar = false;
+                    
                     //Comer
                     if((Util.StrEnum(Objeto.Carne) + Util.StrEnum(Objeto.Baya)).Contains(Objeto_)){
                         Util.Print("Comer: " + Objeto_ + " cocinada", isDebug);
@@ -282,8 +278,8 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                         NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
                         if(Objeto_.Equals(Util.StrEnum(Objeto.Carne)))
                             NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
+                        if(listDeseos.Contains(Util.StrEnum(Percepcion.Hambre))) listDeseos.Remove(Util.StrEnum(Percepcion.Hambre));
                     }//END Comer
-                    ejecutandoMeta = false;
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Comerciar)):
@@ -304,12 +300,16 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                     if(instancias[Util.StrEnum(Objeto.Agua)].Count == 0) 
                         instancias[Util.StrEnum(Percepcion.Recurso)].Remove(Util.StrEnum(Objeto.Agua));
                     NuevoEstado(Util.StrEnum(Percepcion.Sed), false);
+                    if(listDeseos.Contains(Util.StrEnum(Percepcion.Sed))) listDeseos.Remove(Util.StrEnum(Percepcion.Sed));
                     //END BEBER
-                    finalizar = false;
-                    ejecutandoMeta = false;
                 }
                 break;
         }
-        
+        if(finalizar)
+        {
+            finalizar = false;
+            IniciarDeliberacion();
+            if(metaSelected.Equals("")) IniciarDeliberacion();
+        }
     } 
 }

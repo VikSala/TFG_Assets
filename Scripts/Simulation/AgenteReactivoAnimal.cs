@@ -1,26 +1,31 @@
 using UnityEngine.AI;
 using UnityEngine;
+using System.Collections;
 
 public class AgenteReactivoAnimal : AgentePushdownAutomata
 {
-    public NavMeshAgent navMeshAgent;   Vector3 posicionTemporal = Vector3.zero;
+    public NavMeshAgent navMeshAgent;   Vector3 posicionTemporal = Vector3.zero; //bool congelar = false;
+    public GameObject ObjetoCarne;
     Percepcion estadoAnterior;
     public GameObject Hambre, Sed;
-    public RandomPlaneSpawner rps;
-    bool estoyDurmiendo = false, estoyAsustado = false, ejecutandoEfecto = false;
+    RandomPlaneSpawner rps;
+    bool estoyDurmiendo = false, estoyAsustado = false, ejecutandoEfecto = false, inicio = true;
     float velocidadOriginal;
-    string nombre;
+    string nombre, id;
+    [System.NonSerialized]public bool congelar = false;//cazado
 
-    void Update()
+    /*void Update()
     {
         if(Input.GetKeyDown(KeyCode.Space)) print(estadoActual);
-    }
+    }*/
 
     protected override void Start()
     {
         base.Start();
+        rps = GameObject.FindWithTag("GameController").GetComponent<RandomPlaneSpawner>();
         GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
-        nombre = gameObject.transform.parent.name;
+        nombre = gameObject.name;
+        id = gameObject.name.Split("_")[2];
         velocidadOriginal = navMeshAgent.speed;
         InvokeRepeating("PercepcionExterna", 0f, Random.Range(0f, 0.25f));
         
@@ -30,7 +35,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
     }
 
     void TomarDecisiones(Vector3 targetPosition)
-    {
+    {   if(congelar) return;
         estadoActual = controladorEstados.ObtenerEstadoActual();
         estadoAnterior = estadoActual;
         
@@ -47,7 +52,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                     targetPosition = Hambre.transform.position;
                     Ir(targetPosition); Util.Print("El animal va a comer.", isDebug);
                     
-                } else Ir(rps.RandomVector());
+                } else {Ir(rps.RandomVector()); StartCoroutine(InvocarEfecto(Percepcion.SinValor, (float)Tiempo.Corto));}
                 break;
             case Percepcion.Sed:
                 navMeshAgent.speed = velocidadOriginal;
@@ -64,14 +69,17 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                 estoyDurmiendo = true;
                 GetComponent<AnimChangerLayer>().Animar("Dormir", AnimChangerLayer.Layer.Base);
                 ejecutandoEfecto = true;
-                Invoke("Meta", (float)Tiempo.Largo);
+                gameObject.name = Util.StrEnum(Percepcion.Recurso) + "_" + id;
+                navMeshAgent.isStopped = true;
+                StartCoroutine(InvocarEfecto(Percepcion.Somnolencia, (float)Tiempo.Largo));//Invoke("Meta", (float)Tiempo.Largo);
                 break;
             case Percepcion.Amenaza:
                 navMeshAgent.speed = velocidadOriginal*1.25f;//Util.Print("El agente detecta amenaza.", isDebug);
 
                 if(controladorEstados.Contiene(Percepcion.Hambre)){
                     if(controladorEstados.CambiarEstado(Percepcion.Peligro)) 
-                        {Invoke("Meta", (float)Tiempo.Medio); Util.Print("¡El agente ataca al peligro!", isDebug); TomarDecisiones(targetPosition);}
+                        {   StartCoroutine(InvocarEfecto(Percepcion.Peligro, (float)Tiempo.Medio));//Invoke("Meta", (float)Tiempo.Medio); 
+                            Util.Print("¡El agente ataca al peligro!", isDebug); TomarDecisiones(targetPosition);}
                 }else 
                 { 
                     if(posicionTemporal == Vector3.zero)
@@ -85,7 +93,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                 
                 if(!estoyAsustado) {
                     Ir(targetPosition); 
-                    gameObject.transform.parent.name += "_" + Util.StrEnum(Percepcion.Amenaza); 
+                    gameObject.name = Util.StrEnum(Percepcion.Amenaza) + "_" + id; 
                 }   
                 break;
         }
@@ -99,12 +107,21 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
 
     void Ir(Vector3 destino)
     { 
+        navMeshAgent.isStopped = congelar; //if(congelar) {Morir(); return;}
         navMeshAgent.SetDestination(destino); 
 
         if(estadoActual == Percepcion.Peligro || estadoActual == Percepcion.Amenaza)
             GetComponent<AnimChangerLayer>().Animar("Correr", AnimChangerLayer.Layer.Base);
         else
             GetComponent<AnimChangerLayer>().Animar("Andar", AnimChangerLayer.Layer.Base);
+    }
+
+    void Morir()
+    {
+        Instantiate(ObjetoCarne, gameObject.transform.position, Quaternion.identity); 
+        //congelar = true;
+        Destroy(gameObject);
+        //cazado = false;
     }
     
     //PERCEPCION INTERNA
@@ -128,11 +145,14 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
     
     //PERCEPCION EXTERNA
     protected override void PercepcionExterna() {
-        Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
+        if (congelar) {Morir(); return;}
 
-        if (navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance && !navMeshAgent.pathPending)
-            if(!ejecutandoEfecto) //estadoActual != Percepcion.Peligro && 
-                GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
+        Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
+        
+        //if(navMeshAgent.isStopped && !estoyDurmiendo) Destroy(gameObject);
+
+        if (navMeshAgent.isOnNavMesh && navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance)
+            if(!ejecutandoEfecto && !inicio) GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
 
         if(estadoActual != estadoAnterior && (int)estadoActual < (int)Percepcion.Amenaza)
             TomarDecisiones(new Vector3());
@@ -159,29 +179,29 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                             {
                                 case string a when a.Contains(Util.StrEnum(Objeto.Carne)) || a.Contains(Util.StrEnum(Objeto.Baya)):
                                     Hambre = hit.collider.gameObject;
-                                    if(estadoActual.Equals(Percepcion.Hambre)) 
+                                    if(estadoActual.Equals(Percepcion.Hambre) && navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance) 
                                     {
                                         TomarDecisiones(Hambre.transform.position);
                                         GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Base);  
                                         ejecutandoEfecto = true;                                      
-                                        Invoke("Meta", (float)Tiempo.Corto);
+                                        StartCoroutine(InvocarEfecto(Percepcion.Hambre, (float)Tiempo.Corto));//Invoke("Meta", (float)Tiempo.Corto);
                                     }
                                     break;
                                 case string a when a.Contains(Util.StrEnum(Lugar.Lago)):
                                     Sed = hit.collider.gameObject;
-                                    if(estadoActual.Equals(Percepcion.Sed)) 
+                                    if(estadoActual.Equals(Percepcion.Sed) && navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance) 
                                     {
                                         TomarDecisiones(Sed.transform.position);
                                         GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Base);
                                         ejecutandoEfecto = true;
-                                        Invoke("Meta", (float)Tiempo.Corto);
+                                        StartCoroutine(InvocarEfecto(Percepcion.Sed, (float)Tiempo.Corto));//Invoke("Meta", (float)Tiempo.Corto);
                                     }
                                     break;
-                                case string a when a.Contains(Util.StrEnum(Entidad.Agente)):
+                                case string a when a.Contains(Util.StrEnum(Entidad.Agente))/* || a.Contains(Util.StrEnum(Entidad.Animal))*/:
                                     isAlerta = true;
                                     if(!estoyDurmiendo && controladorEstados.CambiarEstado(Percepcion.Amenaza))
                                         TomarDecisiones(hit.collider.gameObject.transform.position);
-                                    if(estadoActual == Percepcion.Peligro && !estoyAsustado)
+                                    if(estadoActual.Equals(Percepcion.Peligro) && !estoyAsustado && navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance)
                                         GetComponent<AnimChangerLayer>().Animar("Atacar", AnimChangerLayer.Layer.Base); 
                                     break;
                             }
@@ -195,15 +215,24 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
         {
             GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Base);
             ejecutandoEfecto = true;
-            Invoke("Meta", (float)Tiempo.Corto);
+            StartCoroutine(InvocarEfecto(Percepcion.Sed, (float)Tiempo.Corto));//Invoke("Meta", (float)Tiempo.Corto);
         }
     }
-
-    void Meta()
+    
+    IEnumerator InvocarEfecto(Percepcion estado, float tiempo)
     {
+        yield return new WaitForSeconds(tiempo);
+        
+        Meta(estado);
+    }
+
+    void Meta(Percepcion estado)
+    {
+        inicio = false;
+        if(congelar || !estado.Equals(estadoActual)) return;
         ejecutandoEfecto = false;//GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
 
-        switch (estadoActual)
+        switch (estado)
         {
             case Percepcion.SinValor:
                 Util.Print("El agente no tiene necesidades específicas en este momento.", isDebug);
@@ -212,19 +241,24 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                 FinalizarEstadoActual();    
                 if(Hambre!=null) 
                 {
-                    print("El agente ha comido.");
+                    Util.Print("El agente ha comido.", isDebug);
                     Hambre.GetComponent<DestruirAlEntrar>().toDestroy = true;
                     Hambre = null;
                 }
                 break;
             case Percepcion.Sed:
-                FinalizarEstadoActual();    print("El agente ha bebido.");
+                FinalizarEstadoActual();    Util.Print("El agente ha bebido.", isDebug);
                 break;
             case Percepcion.Somnolencia:
-                estoyDurmiendo = false; FinalizarEstadoActual();    print("El agente ha dormido.");
+                estoyDurmiendo = false; FinalizarEstadoActual();    Util.Print("El agente ha dormido.", isDebug); 
+                gameObject.name = nombre;
                 break;
             case Percepcion.Peligro:
-                estoyAsustado = true; Ir(rps.RandomVector()); FinalizarEstadoActual(); gameObject.transform.parent.name = nombre; print("El agente ha huido.");
+                estoyAsustado = true; 
+                Ir(rps.RandomVector()); 
+                FinalizarEstadoActual(); 
+                gameObject.name = nombre; 
+                Util.Print("El agente ha huido.", isDebug);
                 break;
         }
     }

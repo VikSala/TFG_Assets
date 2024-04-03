@@ -15,7 +15,7 @@ public class LugarManager : MonoBehaviour
             this.posicion = posicion;
         }
     }
-    public GameObject[] Lugares;
+    public List<GameObject> Lugares = new List<GameObject>();
     HashSet<InfoLugar> info = new();
 
     [System.NonSerialized]

@@ -31,24 +31,7 @@ public class AgenteReactivoSim : AgentePushdownAutomata
         }
         estadoAnterior = estadoActual;
         
-        switch (estadoActual)
-        {
-            case Percepcion.SinValor:
-                Util.Print("El agente no tiene necesidades específicas en este momento.", isDebug);
-                break;
-            case Percepcion.Hambre:
-                AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().newMessage(Util.StrEnum(Percepcion.Hambre));
-                break;
-            case Percepcion.Sed:
-                AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().newMessage(Util.StrEnum(Percepcion.Sed));
-                break;
-            case Percepcion.Somnolencia:
-                AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().newMessage(Util.StrEnum(Percepcion.Somnolencia));
-                break;
-            case Percepcion.Amenaza:
-                AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().newMessage(Util.StrEnum(Percepcion.Amenaza));
-                break;
-        }
+        AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().newMessage(Util.StrEnum(estadoActual));
         
         controladorEstados.FinalizarEstadoActual();
         estadoActual = controladorEstados.ObtenerEstadoActual();
@@ -98,8 +81,9 @@ public class AgenteReactivoSim : AgentePushdownAutomata
                                         TomarDecisiones(hit.collider.gameObject);  
                                     isAlerta = true;
                                     break;
-                                case string a when a.Contains(Util.StrEnum(Percepcion.Recurso)):
+                                case string a when a.Contains(Util.StrEnum(Percepcion.Recurso))/* || a.Contains(Util.StrEnum(Entidad.Animal))*/:
                                     AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().ObjetivoTemporal = hit.collider.gameObject;
+                                    if(controladorEstados.Contiene(Percepcion.Hambre)) TomarDecisiones(hit.collider.gameObject);
                                     break;
                                 case string a when Util.strEnumLugar.Contains(nameID.Split("_")[0]):
                                     if(!AgenteDeliberativo.GetComponent<AgenteDeliberativoSim>().instancias[nameID.Split("_")[0]].Contains(nameID))

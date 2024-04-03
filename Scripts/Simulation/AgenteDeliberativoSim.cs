@@ -2,10 +2,12 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
 
 public class AgenteDeliberativoSim : BaseDeliberativo
 {
-    public bool compile = false, isAnimator = false; public GameObject ObjetoCarne; bool ejecutandoEfecto = false;
+    public bool compile = false, isAnimator = false;
+    public GameObject ManoDerecha, ManoIzquierda;
 
     protected override void Awake()
     {
@@ -21,21 +23,15 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         {Util.StrEnum(Objeto.Manos), new HashSet<string>{"Mis Manos"}},
         {Util.StrEnum(Objeto.Hoz), new HashSet<string>{"Hoz_1"}},
         {Util.StrEnum(Objeto.Espada), new HashSet<string>{"Espada_1"}},
-        {Util.StrEnum(Objeto.Agua), new HashSet<string>{"Agua_1"}},//Lago_2//"Agua_1"
+        {Util.StrEnum(Objeto.Agua), new HashSet<string>{"Agua_1"}},//"Agua_1"
         {Util.StrEnum(Objeto.Carne), new HashSet<string>{"Carne_1"}},
         {Util.StrEnum(Objeto.Baya), new HashSet<string>{"Baya_1"}},//Huerto_1
         {Util.StrEnum(Percepcion.Recurso), new HashSet<string>{"Agua", "Carne", "Baya"}},
-        {Util.StrEnum(Lugar.Gremio), new HashSet<string>{"Gremio_1", "Gremio_2"}},
+        {Util.StrEnum(Lugar.Gremio), new HashSet<string>{"Gremio_1", "Gremio_2"}},//, "Gremio_3", "Gremio_4"}},//
         {Util.StrEnum(Lugar.Cocina), new HashSet<string>{"Cocina_1"}},
         {Util.StrEnum(Lugar.Lago), new HashSet<string>{}},//"Lago_1"
         {Util.StrEnum(Percepcion.Amenaza), new HashSet<string>{}}//Amenaza_Oso_1, Amenaza_Pollo_1
         };
-    }
-
-    protected override void Start()
-    {
-        IniciarDeliberacion();
-        InvokeRepeating("Ir", 0f, frecuencia);
     }
 
     void OnValidate()
@@ -153,18 +149,11 @@ public class AgenteDeliberativoSim : BaseDeliberativo
 
     protected override void Ir()
     {
-        if(ObjetivoTemporal != null)
-            if(ObjetivoTemporal.name.Contains(Util.StrEnum(Percepcion.Recurso)) || ObjetivoTemporal.name.Contains(Util.StrEnum(Percepcion.Amenaza)))
-                {
-                    interrumpir = true; 
-                    if(ObjetivoTemporalFinal == null){ResetMeta(); IniciarDeliberacion();} 
-                    else
-                        if(ObjetivoTemporal.name != ObjetivoTemporalFinal.name)
-                            {ResetMeta(); IniciarDeliberacion();}
-                }
+        bool objetivoDetectado = false;
+
         if(navegar && !finalizar)
         {
-            if(Objetivo_ != Vector3.zero) navMeshAgent.SetDestination(Objetivo_);
+            if(Objetivo_ != Vector3.zero) { navMeshAgent.SetDestination(Objetivo_); objetivoDetectado = true;}
             else if(ObjetivoRandom == Vector3.zero){
                 if(Meta_.Equals(Util.StrEnum(Meta.Atacar)))
                 {
@@ -172,7 +161,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     Ejecutar();
                     Util.Print("Enemigo Perdido...", true); if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
                     instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); 
-                    IniciarDeliberacion();
+                    //IniciarDeliberacion();
                     return;
                 }
                 
@@ -180,9 +169,16 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 navMeshAgent.SetDestination(ObjetivoRandom);
             }
 
+            if(objetivoDetectado && ObjetivoTemporalFinal == null && DataMeta.dicGoals[Meta_].objetivo.Item2.Equals(Util.StrEnum(Objetivo.Dinamico)))
+            {
+                finalizar = true; 
+                Ejecutar();
+                Util.Print("Objetivo Perdido...", isDebug);
+                return;
+            }
+
             if (navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance && !navMeshAgent.pathPending){
                 finalizar = true;
-                destinoAlcanzado = true;
                 ObjetivoRandom = Vector3.zero;
                 Ejecutar();
             } 
@@ -200,19 +196,17 @@ public class AgenteDeliberativoSim : BaseDeliberativo
 
     protected override void Ejecutar()
     {
-        ejecutandoMeta = true;
-
         switch (Meta_)
         {
             case string a when a.Equals(Util.StrEnum(Meta.Comer)):
                 if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Superior);
-                if(ejecutandoEfecto) Efecto();
-                else Invoke("EjecutarEfecto", (float)Tiempo.Corto);
+                AnimarElemento(Objeto_, true);
+                StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Beber)):
                 if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Superior);
-                if(ejecutandoEfecto) Efecto();
-                else Invoke("EjecutarEfecto", (float)Tiempo.Corto);
+                AnimarElemento(Objeto_, true);
+                StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Dormir)):
                 navegar = true;
@@ -220,25 +214,24 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
-                    if(ejecutandoEfecto) Efecto();
-                    else Invoke("EjecutarEfecto", (float)Tiempo.Largo);
+                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Largo));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Atacar)):
-                navegar = true;
+                navegar = true; AnimarElemento(Objeto_, true);
                 if(finalizar) 
                 {
                     navegar = false;
                     if(Objetivo_ != Vector3.zero && ObjetivoTemporalFinal != null)
                     {
                         if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Atacar", AnimChangerLayer.Layer.Base);
-                        if(ejecutandoEfecto) Efecto();
-                        else Invoke("EjecutarEfecto", (float)Tiempo.Medio);
+                        navMeshAgent.SetDestination(ObjetivoTemporalFinal.transform.position);
+                        StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
                     }
                     else{
                         instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
                         finalizar = false;
-                        ejecutandoMeta = false;
+                        AnimarElemento(Objeto_, false);
                         IniciarDeliberacion();
                         if(metaSelected.Equals("")) IniciarDeliberacion();
                     }
@@ -251,8 +244,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
-                    if(ejecutandoEfecto) Efecto();
-                    else Invoke("EjecutarEfecto", (float)Tiempo.Corto);
+                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Recolectar)):
@@ -262,13 +254,13 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     navegar = false;
                     if(Objetivo_ != Vector3.zero && ObjetivoTemporalFinal != null)
                     {
+                        if(ObjetivoTemporalFinal.name.Split("_").Length < 3) ObjetivoTemporalFinal.GetComponent<AgenteReactivoAnimal>().congelar = true;
                         if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Base);
-                        if(ejecutandoEfecto) Efecto();
-                        else Invoke("EjecutarEfecto", (float)Tiempo.Medio);
+                        AnimarElemento(Objeto_, true);
+                        StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
                     }
                     else{
                         finalizar = false;
-                        ejecutandoMeta = false;
                         IniciarDeliberacion();
                         if(metaSelected.Equals("")) IniciarDeliberacion();
                     }
@@ -280,8 +272,8 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Superior);
-                    if(ejecutandoEfecto) Efecto();
-                    else Invoke("EjecutarEfecto", (float)Tiempo.Medio);
+                    AnimarElemento(Objeto_, true);
+                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Comerciar)):
@@ -290,8 +282,8 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Superior);
-                    if(ejecutandoEfecto) Efecto();
-                    else Invoke("EjecutarEfecto", (float)Tiempo.Medio);
+                    AnimarElemento(Objeto_, true);
+                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.IrLago)):
@@ -300,18 +292,18 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Base);
-                    if(ejecutandoEfecto) Efecto();
-                    else Invoke("EjecutarEfecto", (float)Tiempo.Medio);
+                    AnimarElemento(Util.StrEnum(Objeto.Agua), true);
+                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
                 }
                 break;
         }
     }
 
-    void EjecutarEfecto(){ ejecutandoEfecto = true; Ejecutar(); }
-
-    void Efecto()
+    void Efecto(string meta)
     {
-        switch (Meta_)
+        if(!meta.Equals(Meta_)) return;
+
+        switch (meta)
         {
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Comer]):
                 Util.Print("Comer", isDebug);
@@ -322,7 +314,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 if(Objeto_.Equals(Util.StrEnum(Objeto.Carne)))
                     NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Hambre))) listDeseos.Remove(Util.StrEnum(Percepcion.Hambre));
-                ejecutandoMeta = false;
+                AnimarElemento(Objeto_, false);
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Beber]):
                 Util.Print("Beber", isDebug);
@@ -331,50 +323,59 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     instancias[Util.StrEnum(Percepcion.Recurso)].Remove(Objeto_);
                 NuevoEstado(Util.StrEnum(Percepcion.Sed), false);
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Sed))) listDeseos.Remove(Util.StrEnum(Percepcion.Sed));
-                ejecutandoMeta = false;
+                AnimarElemento(Objeto_, false);
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Dormir]):
                 NuevoEstado(Util.StrEnum(Percepcion.Somnolencia), false);
                 Util.Print("Dormir", isDebug);
                 ObjetivoTemporalFinal = null;
                 instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
-                rps.SpawnPorFrecuencia();
+                //rps.SpawnFrecuencia();
                 finalizar = false;
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Somnolencia))) listDeseos.Remove(Util.StrEnum(Percepcion.Somnolencia));
-                ejecutandoMeta = false;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Atacar]):
-                if(Objetivo_ != Vector3.zero && Elemento_!=null){// && ObjetivoTemporalFinal.name.Split("_")[0].Equals(Util.StrEnum(Percepcion.Amenaza))){
-                    Instantiate(ObjetoCarne, Objetivo_, Quaternion.identity);
-                    Elemento_.GetComponent<DestruirAlEntrar>().toDestroy = true;
+                if(Objetivo_ != Vector3.zero){
+                    try {if(Elemento_!=null)Elemento_.GetComponent<AgenteReactivoAnimal>().congelar = true;} catch(Exception){}
                     Util.Print("Atacar", isDebug);
                 }
                 instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); 
                 finalizar = false;
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Amenaza))) listDeseos.Remove(Util.StrEnum(Percepcion.Amenaza));
-                ejecutandoMeta = false;
+                AnimarElemento(Objeto_, false);
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Huir]):
                 instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
                 Util.Print("Huir", isDebug);
                 finalizar = false;
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Amenaza))) listDeseos.Remove(Util.StrEnum(Percepcion.Amenaza));
-                ejecutandoMeta = false;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Recolectar]):
-                if(Objetivo_ != Vector3.zero && ObjetivoTemporalFinal != null){ //Recurso_Carne_1
+                if(Objetivo_ != Vector3.zero && ObjetivoTemporalFinal != null){ //Recurso_Baya_1 //Recurso_1
                     if(ObjetivoTemporalFinal.name.Split("_")[0].Equals(Util.StrEnum(Percepcion.Recurso))){
-                        string concepto = ObjetivoTemporalFinal.name.Split("_")[1];//Carne
-                        string instancia = ObjetivoTemporalFinal.name.Split("_")[1] + ObjetivoTemporalFinal.name.Split("_")[2];//Carne_1
+                        string concepto, instancia;
+                        
+                        if(ObjetivoTemporalFinal.name.Split("_").Length < 3)
+                        {
+                            concepto = Util.StrEnum(Objeto.Carne);//Carne
+                            instancia = Util.StrEnum(Objeto.Carne) + ObjetivoTemporalFinal.name.Split("_")[1];//Carne_1
+                            ObjetivoTemporalFinal.GetComponent<AgenteReactivoAnimal>().congelar = true;
+                        }else
+                        {
+                            concepto = ObjetivoTemporalFinal.name.Split("_")[1];//Baya
+                            instancia = ObjetivoTemporalFinal.name.Split("_")[1] + ObjetivoTemporalFinal.name.Split("_")[2];//Baya_1
+                            ObjetivoTemporalFinal.GetComponent<DestruirAlEntrar>().toDestroy = true;
+                        }
+                        
                         if(instancias[concepto].Count == 0) 
                             instancias[Util.StrEnum(Percepcion.Recurso)].Add(concepto);
                         instancias[concepto].Add(instancia);
-                        ObjetivoTemporalFinal.GetComponent<DestruirAlEntrar>().toDestroy = true;
+                        
                         Util.Print("Recolectar: " + instancia, isDebug);
                     }
                 }
                 finalizar = false;
-                ejecutandoMeta = false;
+                AnimarElemento(Objeto_, false);
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Cocinar]):
                 Util.Print("Cocinar", isDebug);
@@ -390,7 +391,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                         NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
                     if(listDeseos.Contains(Util.StrEnum(Percepcion.Hambre))) listDeseos.Remove(Util.StrEnum(Percepcion.Hambre));
                 }//END Comer
-                ejecutandoMeta = false;
+                AnimarElemento(Objeto_, false);
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Comerciar]):
                 instancias[Objeto_].Remove(instancias[Objeto_].First());
@@ -409,33 +410,40 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Sed))) listDeseos.Remove(Util.StrEnum(Percepcion.Sed));
                 //END BEBER
                 finalizar = false;
-                ejecutandoMeta = false;
+                AnimarElemento(Objeto_, false);
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.IrLago]):
                 string agua = Util.StrEnum(Objeto.Agua);
-                instancias[Util.StrEnum(Objeto.Agua)].Add(agua+instancias[Util.StrEnum(Objeto.Agua)].Count());
-                instancias[Util.StrEnum(Objeto.Agua)].Add(agua+instancias[Util.StrEnum(Objeto.Agua)].Count());
-                instancias[Util.StrEnum(Percepcion.Recurso)].Add(Util.StrEnum(Objeto.Agua));
+                instancias[agua].Add(agua+instancias[agua].Count());
+                instancias[agua].Add(agua+instancias[agua].Count());
+                instancias[Util.StrEnum(Percepcion.Recurso)].Add(agua);
                 //BEBER
                 Util.Print("Beber en el lago", isDebug);
-                instancias[Util.StrEnum(Objeto.Agua)].Remove(instancias[agua].First());
+                instancias[agua].Remove(instancias[agua].First());
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Sed))) listDeseos.Remove(Util.StrEnum(Percepcion.Sed));
                 NuevoEstado(Util.StrEnum(Percepcion.Sed), false);
                 //END BEBER
                 finalizar = false;
-                ejecutandoMeta = false;
+                AnimarElemento(agua, false);
                 break;
         }
-        ejecutandoEfecto = false;
+        finalizar = false;
         IniciarDeliberacion();
         if(metaSelected.Equals("")) IniciarDeliberacion();
     } 
     
-    void ResetMeta()
+    IEnumerator InvocarEfecto(string meta, float tiempo)
     {
-        finalizar = false;
-        ejecutandoMeta = false;
-        ejecutandoEfecto = false;
+        yield return new WaitForSeconds(tiempo);
+
+        Efecto(meta);
     }
-    
+
+    public void AnimarElemento(string objeto, bool animar)
+    {
+        if (ManoDerecha.transform.Find(objeto) != null) ManoDerecha.transform.Find(objeto).gameObject.SetActive(animar);
+        else if (ManoIzquierda.transform.Find(objeto) != null) ManoIzquierda.transform.Find(objeto).gameObject.SetActive(animar);
+        else
+            Debug.Log("No se encontró un hijo con el nombre: " + objeto);
+    }
 }

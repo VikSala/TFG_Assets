@@ -138,14 +138,15 @@ GameObject:
   m_Component:
   - component: {fileID: 773710975084802244}
   - component: {fileID: 2511392466875652826}
-  - component: {fileID: 3456659577330406181}
   - component: {fileID: 4035422510473154420}
   - component: {fileID: 3253662439278122959}
   - component: {fileID: 7845796222610922138}
   - component: {fileID: 2501069793520117864}
   - component: {fileID: 966855782908253721}
+  - component: {fileID: 5958583435818829927}
+  - component: {fileID: 8742070009469524744}
   m_Layer: 0
-  m_Name: Raton
+  m_Name: Animal_Raton_
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -193,29 +194,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!136 &3456659577330406181
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1533923540815040578}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 1
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.41, z: 0}
 --- !u!54 &4035422510473154420
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -279,12 +257,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isDebug: 0
   timeMultiplier: 1
-  perceptionRadius: 5
-  debugPerception: 1
+  perceptionRadius: 10
+  debugPerception: 0
   navMeshAgent: {fileID: 2511392466875652826}
+  ObjetoCarne: {fileID: 7276640338338043219, guid: c6460b5e336b7314c88b9d71bab0ded3, type: 3}
   Hambre: {fileID: 0}
   Sed: {fileID: 0}
-  rps: {fileID: 0}
 --- !u!114 &2501069793520117864
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,11 +304,45 @@ LODGroup:
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 8358590797688322380}
-  - screenRelativeHeight: 0.05
+  - screenRelativeHeight: 0
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 4838867434304648829}
   m_Enabled: 1
+--- !u!114 &5958583435818829927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533923540815040578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6255f230e4b77143823ebf535ea7003, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toDestroy: 0
+--- !u!65 &8742070009469524744
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533923540815040578}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 2, z: 1}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &2086628256902609850
 GameObject:
   m_ObjectHideFlags: 0

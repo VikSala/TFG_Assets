@@ -3,11 +3,15 @@ using System.Collections.Generic;
 
 public class RandomPlaneSpawner : MonoBehaviour
 {
+    [SerializeField]
+    public enum Escena
+    {
+        Reactivo,
+        MultiAgente
+    }
+    [SerializeField] public Escena escena = Escena.MultiAgente;
     public GameObject prefabAmenaza, prefabPeligro;
     public Transform planeToSpawnOn;
-    public int numberOfObjects = 10;
-    public int seed = 123;
-    public bool useSeed = true, isProtoReactivo = false;
     
     [System.NonSerialized]
     public bool doSpawn = true;
@@ -15,22 +19,26 @@ public class RandomPlaneSpawner : MonoBehaviour
 
     void Start()
     {
-        seed = Util.seed;//Random.InitState(seed);
-        if(isProtoReactivo) InvokeRepeating("SpawnManager", 0f, 1f);
-        else SpawnPorFrecuencia();
+        SpawnManager();
     }
 
-    public void SpawnPorFrecuencia()
+    void SpawnManager()
     {
+        switch(escena)
+        {
+            case Escena.Reactivo: InvokeRepeating("SpawnReactivo", 0f, 1f);
+                break;
+            case Escena.MultiAgente: SpawnFrecuencia(); 
+                break;
+        }
+    }
+
+    public void SpawnFrecuencia()
+    {
+        int fActual, frecuencia = (int)(planeToSpawnOn.localScale.x * 5);
+
         GameObject respawnObject = GameObject.FindWithTag("Respawn");
         if(respawnObject != null) Destroy(respawnObject);
-
-        if (!useSeed)
-        {
-            // Semilla basada en el tiempo actual
-            seed = System.Environment.TickCount;
-            Random.InitState(seed);
-        }
 
         // Crear un objeto vacío como contenedor
         GameObject container = new GameObject("Contenedor");
@@ -39,19 +47,24 @@ public class RandomPlaneSpawner : MonoBehaviour
         // Instanciar los objetos basados en la frecuencia
         foreach (var kvp in objetosFrecuencia)
         {
-            for (int i = 0; i < kvp.frequency; i++)
+            fActual = (int)(frecuencia * kvp.frequency);
+
+            for (int i = 0; i < fActual; i++)
             {
                 Vector3 spawnPosition = RandomVector();
 
                 // Instanciar el prefab en la posición calculada
                 GameObject spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.identity);
-                spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();//+= i.ToString();//
+                spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();
                 spawnedObject.transform.parent = container.transform;
+                if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago)))
+                    GetComponent<LugarManager>().Lugares.Add(spawnedObject);
             }
         }
+        GetComponent<LugarManager>().ObtenerLugares();
     }
 
-    void SpawnManager()
+    void SpawnReactivo()
     {
         if(doSpawn){
             //Destroy gameobject tag Respawn
@@ -66,12 +79,7 @@ public class RandomPlaneSpawner : MonoBehaviour
 
     void SpawnObjects()
     {
-        if (!useSeed)
-        {
-            // Semilla basada en el tiempo actual
-            seed = System.Environment.TickCount;
-            Random.InitState(seed);
-        }
+        int numberOfObjects = 10;
 
         // Crear un objeto vacío como contenedor
         GameObject container = new GameObject("Contenedor");
@@ -120,5 +128,7 @@ public class RandomPlaneSpawner : MonoBehaviour
 public class ObjectFrequency
 {
     public GameObject gameObject;
-    public int frequency;
+
+    [Range(0f, 1f)]
+    public float frequency;
 }

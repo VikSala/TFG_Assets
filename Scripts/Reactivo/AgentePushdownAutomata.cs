@@ -92,8 +92,6 @@ public class AgentePushdownAutomata : MonoBehaviour
     {
         controladorEstados = new ControladorEstados(isDebug);
         estadoActual = controladorEstados.ObtenerEstadoActual();
-
-        //InvokeRepeating("PercepcionExterna", 0f, Util.frecuencia*0.9f);
         
         //Iniciar percepción interna
         PercepcionInterna();
