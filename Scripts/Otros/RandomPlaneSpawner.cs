@@ -16,9 +16,12 @@ public class RandomPlaneSpawner : MonoBehaviour
     [System.NonSerialized]
     public bool doSpawn = true;
     public List<ObjectFrequency> objetosFrecuencia = new List<ObjectFrequency>();
+    int seed; bool useSeed = false; public bool esElemento = true;
 
     void Start()
     {
+        if(!useSeed) seed = System.Environment.TickCount;
+        Random.InitState(seed); print("Seed: " + seed);
         SpawnManager();
     }
 
@@ -54,14 +57,14 @@ public class RandomPlaneSpawner : MonoBehaviour
                 Vector3 spawnPosition = RandomVector();
 
                 // Instanciar el prefab en la posición calculada
-                GameObject spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.identity);
+                //GameObject spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.identity);
+                GameObject spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
                 spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();
                 spawnedObject.transform.parent = container.transform;
-                if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago)))
-                    GetComponent<LugarManager>().Lugares.Add(spawnedObject);
+                if(esElemento) if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago))) GetComponent<LugarManager>().Lugares.Add(spawnedObject);
             }
         }
-        GetComponent<LugarManager>().ObtenerLugares();
+        if(esElemento) GetComponent<LugarManager>().ObtenerLugares();
     }
 
     void SpawnReactivo()

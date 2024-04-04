@@ -276,7 +276,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   myLayer: 0
-  yo: 2
+  yo: 0
   strPlayAnim: 
 --- !u!205 &966855782908253721
 LODGroup:
