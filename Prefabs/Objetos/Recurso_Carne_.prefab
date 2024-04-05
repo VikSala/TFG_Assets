@@ -261,7 +261,6 @@ GameObject:
   - component: {fileID: 473151553714976024}
   - component: {fileID: 8675230949138970769}
   - component: {fileID: 4192887954141192458}
-  - component: {fileID: 9026640376959896849}
   - component: {fileID: 4928205341228394706}
   m_Layer: 0
   m_Name: Recurso_Carne_
@@ -359,26 +358,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &9026640376959896849
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7276640338338043219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f0146c9ea9a3d44eb017cfa4d22542b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  LookAtRange: 1
-  AddRigidbody: 0
-  InteractionKey: 0
-  canvasObjectOffset: {x: 0, y: 1.5, z: 0}
-  EventOnInteraction:
-    m_PersistentCalls:
-      m_Calls: []
-  textInCanvas: Baya
 --- !u!114 &4928205341228394706
 MonoBehaviour:
   m_ObjectHideFlags: 0

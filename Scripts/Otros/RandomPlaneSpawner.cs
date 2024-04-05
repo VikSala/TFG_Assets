@@ -10,18 +10,19 @@ public class RandomPlaneSpawner : MonoBehaviour
         MultiAgente
     }
     [SerializeField] public Escena escena = Escena.MultiAgente;
-    public GameObject prefabAmenaza, prefabPeligro;
+    public GameObject prefabAmenaza, prefabPeligro, navigationPlane;
     public Transform planeToSpawnOn;
     
     [System.NonSerialized]
     public bool doSpawn = true;
     public List<ObjectFrequency> objetosFrecuencia = new List<ObjectFrequency>();
     int seed; bool useSeed = false; public bool esElemento = true;
+    public GameObject Elementos;
 
     void Start()
     {
         if(!useSeed) seed = System.Environment.TickCount;
-        Random.InitState(seed); print("Seed: " + seed);
+        Random.InitState(23063000); print("Seed: " + seed);//508998734//532948828
         SpawnManager();
     }
 
@@ -40,12 +41,12 @@ public class RandomPlaneSpawner : MonoBehaviour
     {
         int fActual, frecuencia = (int)(planeToSpawnOn.localScale.x * 5);
 
-        GameObject respawnObject = GameObject.FindWithTag("Respawn");
+        GameObject respawnObject = GameObject.FindWithTag(Util.SpawnTag);
         if(respawnObject != null) Destroy(respawnObject);
 
         // Crear un objeto vacío como contenedor
         GameObject container = new GameObject("Contenedor");
-        container.tag = "Respawn";
+        container.tag = Util.SpawnTag;
 
         // Instanciar los objetos basados en la frecuencia
         foreach (var kvp in objetosFrecuencia)
@@ -55,16 +56,40 @@ public class RandomPlaneSpawner : MonoBehaviour
             for (int i = 0; i < fActual; i++)
             {
                 Vector3 spawnPosition = RandomVector();
-
+                GameObject spawnedObject;
                 // Instanciar el prefab en la posición calculada
-                //GameObject spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.identity);
-                GameObject spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
-                spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();
-                spawnedObject.transform.parent = container.transform;
-                if(esElemento) if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago))) GetComponent<LugarManager>().Lugares.Add(spawnedObject);
+                if(esElemento)
+                {
+                    RaycastHit hit;
+                    if (Physics.Raycast(spawnPosition + Vector3.up * 100f, Vector3.down, out hit, Mathf.Infinity))
+                    {
+                        if (hit.collider.CompareTag(Util.TerrainTag))
+                        {
+                            // El raycast golpeó el objeto "Terrain", entonces podemos instanciar el prefab
+                            spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+                            spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();
+
+                            spawnedObject.transform.parent = container.transform;
+                            if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago))) 
+                                GetComponent<LugarManager>().Lugares.Add(spawnedObject);
+                        }
+                        else{ i--; continue;}
+                    }
+                }
+                else
+                {
+                    spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+                    spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();
+                    spawnedObject.transform.parent = navigationPlane.transform;
+                }
             }
         }
         if(esElemento) GetComponent<LugarManager>().ObtenerLugares();
+        else
+        {
+            GetComponent<NavMUpdate>().doUpdate = true;
+            Elementos.SetActive(true);
+        }
     }
 
     void SpawnReactivo()
@@ -114,7 +139,7 @@ public class RandomPlaneSpawner : MonoBehaviour
         randomX = Random.Range(-planeToSpawnOn.localScale.x * 4.873f, planeToSpawnOn.localScale.x * 4.873f);
         randomZ = Random.Range(-planeToSpawnOn.localScale.z * 4.873f, planeToSpawnOn.localScale.z * 4.873f);
         
-        return new Vector3(randomX, 1f, randomZ) + planeToSpawnOn.position;
+        return new Vector3(randomX, 0f, randomZ) + planeToSpawnOn.position;
     }
 
     public float GetDistanciaPlano()
