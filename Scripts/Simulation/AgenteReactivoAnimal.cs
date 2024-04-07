@@ -4,7 +4,7 @@ using System.Collections;
 
 public class AgenteReactivoAnimal : AgentePushdownAutomata
 {
-    public NavMeshAgent navMeshAgent;   Vector3 posicionTemporal = Vector3.zero; //bool congelar = false;
+    public NavMeshAgent navMeshAgent;   Vector3 posicionTemporal = Vector3.zero;
     public GameObject ObjetoCarne;
     Percepcion estadoAnterior;
     public GameObject Hambre, Sed;
@@ -12,7 +12,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
     bool estoyDurmiendo = false, estoyAsustado = false, ejecutandoEfecto = false, inicio = true;
     float velocidadOriginal;
     string nombre, id;
-    [System.NonSerialized]public bool congelar = false;//cazado
+    [System.NonSerialized]public bool congelar = false;
 
     /*void Update()
     {
@@ -21,13 +21,19 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
 
     protected override void Start()
     {
-        base.Start();
+        controladorEstados = new ControladorEstados(isDebug);
+        estadoActual = controladorEstados.ObtenerEstadoActual();
+        
+        //Iniciar percepción interna
+        PercepcionInterna();
+
+        //base.Start();
         rps = GameObject.FindWithTag("GameController").GetComponent<RandomPlaneSpawner>();
         GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
         nombre = gameObject.name;
         id = gameObject.name.Split("_")[2];
         velocidadOriginal = navMeshAgent.speed;
-        InvokeRepeating("PercepcionExterna", 0f, Random.Range(0f, 0.25f));
+        InvokeRepeating("PercepcionExterna", 0f, Random.Range(0.05f, 0.25f));
         
         //Iniciar con comer
         if(controladorEstados.CambiarEstado(Percepcion.Hambre))
@@ -61,7 +67,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                 {
                     targetPosition = Sed.transform.position;
                     Ir(targetPosition); Util.Print("El animal va a beber.", isDebug);
-                } else Ir(rps.RandomVector());
+                } else {Ir(rps.RandomVector()); StartCoroutine(InvocarEfecto(Percepcion.SinValor, (float)Tiempo.Corto));}
                 break;
             case Percepcion.Somnolencia:
                 navMeshAgent.speed = velocidadOriginal;

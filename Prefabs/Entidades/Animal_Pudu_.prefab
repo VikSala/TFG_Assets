@@ -762,7 +762,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 14
   m_CollisionDetection: 0
 --- !u!95 &311481014344411551
 Animator:
@@ -819,7 +819,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   myLayer: 0
-  yo: 0
+  yo: 3
   strPlayAnim: 
 --- !u!205 &4250976849891206548
 LODGroup:

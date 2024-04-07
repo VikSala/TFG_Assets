@@ -22,7 +22,7 @@ public class RandomPlaneSpawner : MonoBehaviour
     void Start()
     {
         if(!useSeed) seed = System.Environment.TickCount;
-        Random.InitState(23063000); print("Seed: " + seed);//508998734//532948828
+        Random.InitState(seed); //print("Seed: " + seed);//508998734//532948828//23063000
         SpawnManager();
     }
 

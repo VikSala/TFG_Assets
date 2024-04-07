@@ -27,7 +27,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         {Util.StrEnum(Objeto.Carne), new HashSet<string>{"Carne_1"}},
         {Util.StrEnum(Objeto.Baya), new HashSet<string>{"Baya_1"}},//Huerto_1
         {Util.StrEnum(Percepcion.Recurso), new HashSet<string>{"Agua", "Carne", "Baya"}},
-        {Util.StrEnum(Lugar.Gremio), new HashSet<string>{"Gremio_1", "Gremio_2"}},//, "Gremio_3", "Gremio_4"}},//
+        {Util.StrEnum(Lugar.Gremio), new HashSet<string>{"Gremio_1", "Gremio_2", "Gremio_3", "Gremio_4"}},//, "Gremio_3", "Gremio_4"}},//
         {Util.StrEnum(Lugar.Cocina), new HashSet<string>{"Cocina_1"}},
         {Util.StrEnum(Lugar.Lago), new HashSet<string>{}},//"Lago_1"
         {Util.StrEnum(Percepcion.Amenaza), new HashSet<string>{}}//Amenaza_Oso_1, Amenaza_Pollo_1
@@ -159,7 +159,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     finalizar = true;
                     Ejecutar();
-                    Util.Print("Enemigo Perdido...", true); if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
+                    Util.Print("Enemigo Perdido...", isDebug); if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
                     instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); 
                     //IniciarDeliberacion();
                     return;
@@ -381,7 +381,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 Util.Print("Cocinar", isDebug);
                 finalizar = false;
                 //Comer
-                if((Util.StrEnum(Objeto.Carne) + Util.StrEnum(Objeto.Baya)).Contains(Objeto_)){
+                if((Util.StrEnum(Objeto.Carne) + Util.StrEnum(Objeto.Baya)).Contains(Objeto_) && !Objeto_.Equals("")){
                     Util.Print("Comer: " + Objeto_ + " cocinada", isDebug);
                     instancias[Objeto_].Remove(instancias[Objeto_].First());
                     if(instancias[Objeto_].Count == 0) 

@@ -45,7 +45,7 @@ public partial class BaseDeliberativo : MonoBehaviour
 
     protected virtual void Awake()
     {
-        frecuencia = UnityEngine.Random.Range(0f, 0.25f);
+        frecuencia = UnityEngine.Random.Range(0.05f, 0.25f);
         nombreAgente = gameObject.name;
         yo = new Personalidad();
 

@@ -127,7 +127,7 @@ public class AgentePushdownAutomata : MonoBehaviour
     #region PERCEPCION INTERNA
     [Tooltip("Variable que maneja los tiempos de la percepción interna sobre los estados: Hambre, Sed, Somnolencia")]
     public int timeMultiplier = 1;
-    void PercepcionInterna()
+    protected void PercepcionInterna()
     {
         InvokeRepeating("InputHambre", 8f*timeMultiplier, 15f*timeMultiplier);
         InvokeRepeating("InputSed", 16f*timeMultiplier, 15f*timeMultiplier);
