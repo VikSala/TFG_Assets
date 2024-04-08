@@ -6,31 +6,22 @@ public class CicloDiaNoche : MonoBehaviour
     public Light luz;
     public Image pantallaNegra;
     public Text textoDia;
+    public Transform Agentes;
     public float transicion = 1;
     private int numIteraciones = 1;
-    int seed;
+    //int seed;
 
     void Start()
     {
-        seed = System.Environment.TickCount;//textoDia.text = "Día 0  Semilla: " + System.Environment.TickCount;
+        //seed = System.Environment.TickCount;//textoDia.text = "Día 0  Semilla: " + System.Environment.TickCount;
         FadeInterfaz(true);
         InvokeRepeating("IniciarNoche", 0f, 60f);
         InvokeRepeating("IniciarDia", 0f, 80f);
     }
 
-    /*private void Update()
-    {
-        if (activarInterfaz)
-        {
-            activarInterfaz = false;
-            pantallaNegra.CrossFadeAlpha(0, transicion, false);
-            textoDia.CrossFadeAlpha(0, transicion, false);
-        }
-    }*/
-
     void IniciarDia()
     {
-        textoDia.text = "Día " + numIteraciones + "  Semilla: " + seed;
+        textoDia.text = "Día " + numIteraciones + "  Semilla: " + Util.seed;
         FadeInterfaz(false);
         luz.enabled = true;
         FadeInterfaz(true); Debug.Log("Día " + numIteraciones);
@@ -43,7 +34,18 @@ public class CicloDiaNoche : MonoBehaviour
         }
     }
 
-    void IniciarNoche() { luz.enabled = false; }
+    void IniciarNoche() 
+    { 
+        luz.enabled = false; 
+        
+        if (numIteraciones == 4 && Application.isEditor)
+        {
+            foreach (Transform Agente in Agentes) 
+                Agente.GetComponent<DatosEntidad>().GuardarResultados();
+            
+            Debug.Log("== Simulacion " + Util.seed + " Guardada ==");
+        }
+    }
 
     void FadeInterfaz(bool activarFade)
     {

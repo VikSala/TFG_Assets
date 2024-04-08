@@ -51,6 +51,7 @@ public partial class BaseDeliberativo : MonoBehaviour
 
         GetComponent<DatosEntidad>().Nombre = nombreAgente;
         GetComponent<DatosEntidad>().Frecuencia = frecuencia;
+        GetComponent<DatosEntidad>().Rasgos = yo.myPersAttributes;
         GetComponent<DatosEntidad>().RasgosPersonalidad = new List<string>(yo.myPersAttributes.Split(",", StringSplitOptions.RemoveEmptyEntries));
     }
 

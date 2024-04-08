@@ -4,7 +4,7 @@ using UnityEngine;
 
 public partial class Util : MonoBehaviour
 {
-    public static int seed; public int semilla; public bool useSeed = true; 
+    public static int seed; public int semilla; public bool useSeed = false; 
     public static float frecuencia = 0.25f;
     public static string AND = "1", SpawnTag = "Respawn", TerrainTag = "Terrain"; public static char NOT = '0';
     public static Dictionary<string, string> tipoObjeto = GetTipoObjeto();

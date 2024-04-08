@@ -315,6 +315,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Hambre))) listDeseos.Remove(Util.StrEnum(Percepcion.Hambre));
                 AnimarElemento(Objeto_, false);
+                GetComponent<DatosEntidad>().Comer++;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Beber]):
                 Util.Print("Beber", isDebug);
@@ -324,15 +325,16 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 NuevoEstado(Util.StrEnum(Percepcion.Sed), false);
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Sed))) listDeseos.Remove(Util.StrEnum(Percepcion.Sed));
                 AnimarElemento(Objeto_, false);
+                GetComponent<DatosEntidad>().Beber++;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Dormir]):
                 NuevoEstado(Util.StrEnum(Percepcion.Somnolencia), false);
                 Util.Print("Dormir", isDebug);
                 ObjetivoTemporalFinal = null;
                 instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
-                //rps.SpawnFrecuencia();
                 finalizar = false;
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Somnolencia))) listDeseos.Remove(Util.StrEnum(Percepcion.Somnolencia));
+                GetComponent<DatosEntidad>().Dormir++;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Atacar]):
                 if(Objetivo_ != Vector3.zero){
@@ -343,12 +345,14 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 finalizar = false;
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Amenaza))) listDeseos.Remove(Util.StrEnum(Percepcion.Amenaza));
                 AnimarElemento(Objeto_, false);
+                GetComponent<DatosEntidad>().Atacar++;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Huir]):
                 instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
                 Util.Print("Huir", isDebug);
                 finalizar = false;
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Amenaza))) listDeseos.Remove(Util.StrEnum(Percepcion.Amenaza));
+                GetComponent<DatosEntidad>().Huir++;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Recolectar]):
                 if(Objetivo_ != Vector3.zero && ObjetivoTemporalFinal != null){ //Recurso_Baya_1 //Recurso_1
@@ -372,6 +376,9 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                         instancias[concepto].Add(instancia);
                         
                         Util.Print("Recolectar: " + instancia, isDebug);
+                        GetComponent<DatosEntidad>().Recolectar++;
+                        if(concepto.Equals(Util.StrEnum(Objeto.Carne))) GetComponent<DatosEntidad>().Carne++;
+                        else GetComponent<DatosEntidad>().Baya++;
                     }
                 }
                 finalizar = false;
@@ -392,6 +399,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     if(listDeseos.Contains(Util.StrEnum(Percepcion.Hambre))) listDeseos.Remove(Util.StrEnum(Percepcion.Hambre));
                 }//END Comer
                 AnimarElemento(Objeto_, false);
+                GetComponent<DatosEntidad>().Cocinar++;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.Comerciar]):
                 instancias[Objeto_].Remove(instancias[Objeto_].First());
@@ -411,6 +419,8 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 //END BEBER
                 finalizar = false;
                 AnimarElemento(Objeto_, false);
+                GetComponent<DatosEntidad>().Comerciar++;
+                GetComponent<DatosEntidad>().Agua++;
                 break;
             case string a when a.Equals(Util.strEnumMeta[(int)Meta.IrLago]):
                 string agua = Util.StrEnum(Objeto.Agua);
@@ -425,6 +435,8 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 //END BEBER
                 finalizar = false;
                 AnimarElemento(agua, false);
+                GetComponent<DatosEntidad>().IrLago++;
+                GetComponent<DatosEntidad>().Agua++;
                 break;
         }
         finalizar = false;
