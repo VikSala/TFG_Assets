@@ -3,6 +3,7 @@ using UnityEngine.UI;
 
 public class CicloDiaNoche : MonoBehaviour
 {
+    public bool isManager = false;
     public Light luz;
     public Image pantallaNegra;
     public Text textoDia;
@@ -14,37 +15,45 @@ public class CicloDiaNoche : MonoBehaviour
     void Start()
     {
         //seed = System.Environment.TickCount;//textoDia.text = "Día 0  Semilla: " + System.Environment.TickCount;
-        FadeInterfaz(true);
+        if(isManager) FadeInterfaz(true);
         InvokeRepeating("IniciarNoche", 0f, 60f);
         InvokeRepeating("IniciarDia", 0f, 80f);
     }
 
     void IniciarDia()
     {
-        textoDia.text = "Día " + numIteraciones + "  Semilla: " + Util.seed;
-        FadeInterfaz(false);
-        luz.enabled = true;
-        FadeInterfaz(true); Debug.Log("Día " + numIteraciones);
+        if(isManager)
+        {
+            textoDia.text = "Día " + numIteraciones + "  Semilla: " + Util.seed;
+            FadeInterfaz(false);
+            luz.enabled = true;
+            FadeInterfaz(true); Debug.Log("Día " + numIteraciones);
+        }
+        
         numIteraciones++;
 
         // Si han pasado 3 días, reiniciar la escena
-        if (numIteraciones > 4)
+        if (numIteraciones > 4 && isManager)
         {
+            Debug.Log("== Simulacion Multiple Ejecutada ==");
             ReiniciarEscena();
         }
     }
 
     void IniciarNoche() 
     { 
-        luz.enabled = false; 
+        if(isManager) luz.enabled = false; 
         
-        if (numIteraciones == 4 && Application.isEditor)
+        if (numIteraciones == 4 && Application.isEditor && !isManager)
         {
-            foreach (Transform Agente in Agentes) 
-                Agente.GetComponent<DatosEntidad>().GuardarResultados();
-            
-            Debug.Log("== Simulacion " + Util.seed + " Guardada ==");
+            Invoke("GuardarSimData", Random.Range(1, 3));
+            //Debug.Log("== Simulacion " + Util.seed + " Guardada ==");
         }
+    }
+
+    void GuardarSimData()
+    {
+        foreach (Transform Agente in Agentes) Agente.GetComponent<DatosEntidad>().GuardarResultados();
     }
 
     void FadeInterfaz(bool activarFade)
