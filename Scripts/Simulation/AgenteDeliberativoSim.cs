@@ -217,12 +217,12 @@ public class AgenteDeliberativoSim : BaseDeliberativo
             case string a when a.Equals(Util.StrEnum(Meta.Comer)):
                 if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Superior);
                 AnimarElemento(Objeto_, true);
-                StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
+                StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Corto)));
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Beber)):
                 if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Superior);
                 AnimarElemento(Objeto_, true);
-                StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
+                StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Corto)));
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Dormir)):
                 navegar = true;
@@ -230,7 +230,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
-                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Largo));
+                    StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Largo)));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Atacar)):
@@ -242,7 +242,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     {
                         if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Atacar", AnimChangerLayer.Layer.Base);
                         navMeshAgent.SetDestination(ObjetivoTemporalFinal.transform.position);
-                        StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
+                        StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Corto)));
                     }
                     else{
                         instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
@@ -259,7 +259,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 {
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Idle", AnimChangerLayer.Layer.Base);
-                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
+                    StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Medio)));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Recolectar)):
@@ -272,7 +272,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                         if(ObjetivoTemporalFinal.name.Split("_").Length < 3) ObjetivoTemporalFinal.GetComponent<AgenteReactivoAnimal>().congelar = true;
                         if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Base);
                         AnimarElemento(Objeto_, true);
-                        StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Corto));
+                        StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Corto)));
                     }
                     else{
                         finalizar = false;
@@ -287,7 +287,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Superior);
                     AnimarElemento(Objeto_, true);
-                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
+                    StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Medio)));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Comerciar)):
@@ -297,7 +297,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Superior);
                     AnimarElemento(Objeto_, true);
-                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
+                    StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Medio)));
                 }
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.IrLago)):
@@ -307,7 +307,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     navegar = false;
                     if(isAnimator) GetComponent<AnimChangerLayer>().Animar("Recolectar", AnimChangerLayer.Layer.Base);
                     AnimarElemento(Util.StrEnum(Objeto.Agua), true);
-                    StartCoroutine(InvocarEfecto(Meta_, (float)Tiempo.Medio));
+                    StartCoroutine(InvocarEfecto(Meta_, TiempoMeta(Tiempo.Medio)));
                 }
                 break;
         }
@@ -470,5 +470,17 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         else if (ManoIzquierda.transform.Find(objeto) != null) ManoIzquierda.transform.Find(objeto).gameObject.SetActive(animar);
         else
             Debug.Log("No se encontró un hijo con el nombre: " + objeto);
+    }
+
+    float TiempoMeta(Tiempo tiempo)
+    {
+        float variacion = UnityEngine.Random.Range(0.9f, 1.1f);
+        switch (tiempo)
+        {
+            case Tiempo.Corto: return variacion * (float)tiempo;
+            case Tiempo.Medio: return variacion * (float)tiempo;
+            case Tiempo.Largo: return variacion * (float)tiempo;
+        }
+        return 0;
     }
 }

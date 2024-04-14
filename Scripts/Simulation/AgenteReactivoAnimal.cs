@@ -16,6 +16,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
 
     protected override void Start()
     {
+        timeMultiplier = Random.Range(0.9f, 1.1f);
         controladorEstados = new ControladorEstados(isDebug);
         estadoActual = controladorEstados.ObtenerEstadoActual();
         
