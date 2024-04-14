@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ca09d4dc46c44b24da78a6ba5e81dfa8
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 224909
+  packageName: Data Toolkit - All in one data-driven assistant
+  packageVersion: 1.1.2
+  assetPath: Assets/Data Toolkit/Samples/Data Toolkit/CSV Util/Scenes/Sample.unity
+  uploadId: 526997

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-public class DataMeta              //SQLITE: Metas
+public class DataMeta              
 {
     public static Dictionary<string, HashSet<Tuple<string, float>>> dicGoalOntology = GetGoalElementsOntology();
     public struct Data

@@ -16,13 +16,13 @@ public class RandomPlaneSpawner : MonoBehaviour
     [System.NonSerialized]
     public bool doSpawn = true;
     public List<ObjectFrequency> objetosFrecuencia = new List<ObjectFrequency>();
-    int seed; bool useSeed = false; public bool esElemento = true;
+    public bool esElemento = true, manageNavMesh = false;
     public GameObject Elementos;
+    GameObject container;
 
     void Start()
     {
-        //if(!useSeed) seed = System.Environment.TickCount;
-        if(Util.compartirSemilla) Random.InitState(Util.seed); //print("Seed: " + seed);//508998734//532948828//23063000
+        if(Util.compartirSemilla) Random.InitState(Util.seed);
         else Random.InitState(System.Environment.TickCount);
         SpawnManager();
     }
@@ -33,7 +33,7 @@ public class RandomPlaneSpawner : MonoBehaviour
         {
             case Escena.Reactivo: InvokeRepeating("SpawnReactivo", 0f, 1f);
                 break;
-            case Escena.MultiAgente: SpawnFrecuencia(); 
+            case Escena.MultiAgente: CrearEcosistema();//SpawnFrecuencia(); 
                 break;
         }
     }
@@ -61,21 +61,12 @@ public class RandomPlaneSpawner : MonoBehaviour
                 // Instanciar el prefab en la posición calculada
                 if(esElemento)
                 {
-                    RaycastHit hit;
-                    if (Physics.Raycast(spawnPosition + Vector3.up * 100f, Vector3.down, out hit, Mathf.Infinity))
-                    {
-                        if (hit.collider.CompareTag(Util.TerrainTag))
-                        {
-                            // El raycast golpeó el objeto "Terrain", entonces podemos instanciar el prefab
-                            spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
-                            spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();
+                    spawnedObject = Instantiate(kvp.gameObject, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+                    spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + i.ToString();
 
-                            spawnedObject.transform.parent = container.transform;
-                            if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago))) 
-                                GetComponent<LugarManager>().Lugares.Add(spawnedObject);
-                        }
-                        else{ i--; continue;}
-                    }
+                    spawnedObject.transform.parent = container.transform;
+                    if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago))) 
+                        GetComponent<LugarManager>().Lugares.Add(spawnedObject);
                 }
                 else
                 {
@@ -136,10 +127,19 @@ public class RandomPlaneSpawner : MonoBehaviour
     public Vector3 RandomVector()
     {
         float randomX, randomZ;
-        // Generar posiciones aleatorias en la superficie del plano
+        // Generar posiciones aleatorias en la superficie del plano central
         randomX = Random.Range(-planeToSpawnOn.localScale.x * 4.873f, planeToSpawnOn.localScale.x * 4.873f);
         randomZ = Random.Range(-planeToSpawnOn.localScale.z * 4.873f, planeToSpawnOn.localScale.z * 4.873f);
-        
+
+        if(esElemento)
+        {
+            randomX = Random.Range(-planeToSpawnOn.localScale.x * 6f, planeToSpawnOn.localScale.x * 6f);
+            randomZ = Random.Range(-planeToSpawnOn.localScale.z * 6f, planeToSpawnOn.localScale.z * 6f);
+            Vector3 spawn = new Vector3(randomX, 0f, randomZ) + planeToSpawnOn.position;
+            RaycastHit hit;
+            if (Physics.Raycast(spawn + Vector3.up * 100f, Vector3.down, out hit) && hit.transform.tag.Equals(Util.TerrainTag)) return spawn;
+            else return RandomVector();
+        }
         return new Vector3(randomX, 0f, randomZ) + planeToSpawnOn.position;
     }
 
@@ -151,6 +151,68 @@ public class RandomPlaneSpawner : MonoBehaviour
         
         return Vector3.Distance(esquina1, esquina2)/2;
     }
+
+    void CrearEcosistema()
+    {
+        if(esElemento) container = new GameObject("Contenedor");
+        InstanciarObjetos();
+
+        if(esElemento) GetComponent<LugarManager>().ObtenerLugares();
+        else
+        {
+            if(manageNavMesh) GetComponent<NavMUpdate>().doUpdate = true;
+            
+            Elementos.SetActive(manageNavMesh);
+        }
+    }
+
+    void InstanciarObjetos(int indice = 0)
+    {
+        if (indice >= objetosFrecuencia.Count)
+        {
+            // Finalizar
+            return;
+        }
+
+        GameObject objetoActual = objetosFrecuencia[indice].gameObject;
+        int cantidadActual = (int)(planeToSpawnOn.localScale.x * 5 * objetosFrecuencia[indice].frequency);//Densidad = 5
+
+        InstanciarMultiples(objetoActual, cantidadActual);
+
+        InstanciarObjetos(indice + 1);
+    }
+
+    void InstanciarMultiples(GameObject objeto, int cantidad)
+    {
+        if (cantidad <= 0)
+        {
+            // Finalizar
+            return;
+        }
+
+        Vector3 spawnPosition = RandomVector();
+        GameObject spawnedObject;
+        // Instanciar el prefab en la posición calculada
+        if(esElemento)
+        {
+            spawnedObject = Instantiate(objeto, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+            spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + cantidad;
+
+            spawnedObject.transform.parent = container.transform;
+            if(spawnedObject.name.Contains(Util.StrEnum(Lugar.Lago))) 
+                GetComponent<LugarManager>().Lugares.Add(spawnedObject);
+        }
+        else
+        {
+            spawnedObject = Instantiate(objeto, spawnPosition, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+            spawnedObject.name = spawnedObject.name.Split("(Clone)")[0] + cantidad;
+            spawnedObject.transform.parent = navigationPlane.transform;
+        }
+
+        // Llamada recursiva para instanciar el siguiente objeto
+        InstanciarMultiples(objeto, cantidad - 1);
+    }
+
 }
 
 [System.Serializable]

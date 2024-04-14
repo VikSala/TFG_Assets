@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: c1bf05702b892794cb21b6c98e71ddb0
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 224909
+  packageName: Data Toolkit - All in one data-driven assistant
+  packageVersion: 1.1.2
+  assetPath: Assets/Data Toolkit/Runtime/Cache Util/CacheUtil.cs
+  uploadId: 526997

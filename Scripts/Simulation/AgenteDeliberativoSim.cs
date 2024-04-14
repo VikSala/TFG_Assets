@@ -28,7 +28,7 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         {Util.StrEnum(Objeto.Baya), new HashSet<string>{"Baya_1"}},//Huerto_1
         {Util.StrEnum(Percepcion.Recurso), new HashSet<string>{"Agua", "Carne", "Baya"}},
         {Util.StrEnum(Lugar.Gremio), new HashSet<string>{"Gremio_1", "Gremio_2", "Gremio_3", "Gremio_4"}},//, "Gremio_3", "Gremio_4"}},//
-        {Util.StrEnum(Lugar.Cocina), new HashSet<string>{"Cocina_1"}},
+        {Util.StrEnum(Lugar.Cocina), new HashSet<string>{}},//"Cocina_1"
         {Util.StrEnum(Lugar.Lago), new HashSet<string>{}},//"Lago_1"
         {Util.StrEnum(Percepcion.Amenaza), new HashSet<string>{}}//Amenaza_Oso_1, Amenaza_Pollo_1
         };
@@ -48,6 +48,22 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         return (memoria.Contains(Util.StrEnum(Estado.Cansado)) && etiqueta.Equals(Util.StrEnum(Percepcion.Somnolencia))) ||
                                 (memoria.Contains(Util.StrEnum(Estado.Sediento)) && etiqueta.Equals(Util.StrEnum(Percepcion.Sed))) ||
                                 (memoria.Contains(Util.StrEnum(Estado.Hambriento)) && etiqueta.Equals(Util.StrEnum(Percepcion.Hambre)));
+    }
+
+    public int GetBioValor()
+    {
+        int valor = 0;
+
+        if(memoria.Contains(Util.StrEnum(Estado.SinHambre)) || memoria.Contains(Util.StrEnum(Estado.Alimentado))) valor++;
+        else valor--;
+
+        if(memoria.Contains(Util.StrEnum(Estado.SinSed)) || memoria.Contains(Util.StrEnum(Estado.Hidratado))) valor++;
+        else valor--;
+
+        if(memoria.Contains(Util.StrEnum(Estado.Cansado))) valor--;
+        else valor++;
+
+        return valor;
     }
 
     public override void NuevoEstado(string estado, bool masNecesidad)
@@ -233,7 +249,6 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                         finalizar = false;
                         AnimarElemento(Objeto_, false);
                         IniciarDeliberacion();
-                        if(metaSelected.Equals("")) IniciarDeliberacion();
                     }
                     
                 }
@@ -262,7 +277,6 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     else{
                         finalizar = false;
                         IniciarDeliberacion();
-                        if(metaSelected.Equals("")) IniciarDeliberacion();
                     }
                 }
                 break;
@@ -441,7 +455,6 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         }
         finalizar = false;
         IniciarDeliberacion();
-        if(metaSelected.Equals("")) IniciarDeliberacion();
     } 
     
     IEnumerator InvocarEfecto(string meta, float tiempo)

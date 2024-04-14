@@ -27,16 +27,6 @@ public partial class BaseDeliberativo : MonoBehaviour
     protected bool navegar = false, finalizar = false;
     public RandomPlaneSpawner rps;
     public NavMeshAgent navMeshAgent;
-
-    //Conocimiento universal
-    //Dictionary<string, DataMeta.Data> dicGoals = DataMeta.dicGoals;
-    //Dictionary<string, HashSet<Tuple<string, float>>> dicGoalElementsOntology = DataMeta.dicGoalOntology;
-
-    //Memoria
-//la estructura memoria unifica los conceptos mem. largo plazo y corto plazo:
-//- corto plazo: actualizacion de estados biologicos
-//- largo plazo: el resto de conceptos son read_only
-//Instancias tambien lo hace lp:lugares y cp:objetos
     protected HashSet<string> memoria = new HashSet<string>{};
 
     public Dictionary<string, HashSet<string>> instancias = new Dictionary<string, HashSet<string>>(){};
@@ -46,7 +36,7 @@ public partial class BaseDeliberativo : MonoBehaviour
     protected virtual void Awake()
     {
         frecuencia = UnityEngine.Random.Range(0.05f, 0.25f);
-        nombreAgente = gameObject.name;
+        nombreAgente = gameObject.name + "_" + Util.seed;
         yo = new Personalidad();
 
         GetComponent<DatosEntidad>().Nombre = nombreAgente;
@@ -55,9 +45,8 @@ public partial class BaseDeliberativo : MonoBehaviour
         GetComponent<DatosEntidad>().RasgosPersonalidad = new List<string>(yo.myPersAttributes.Split(",", StringSplitOptions.RemoveEmptyEntries));
     }
 
-    void Start()//protected virtual 
+    void Start()
     {
-        //IniciarDeliberacion();//InvokeRepeating("IniciarDeliberacion", 0f, frecuencia);
         InvokeRepeating("Ir", 0f, frecuencia);
     }
 
@@ -66,20 +55,17 @@ public partial class BaseDeliberativo : MonoBehaviour
         metaSelected = "";
         double result, finalResult = 0;
 
-        if(mensajeRecibido|| !finalizar){// || !ejecutandoMeta || interrumpir){
+        if(mensajeRecibido || !finalizar){
             foreach(var kv in DataMeta.dicGoals)
             {
                 foreach(string etiqueta in kv.Value.etiquetas)
                 {
-                    //if(interrumpir) {interrumpir = false;};
-
                     if(listDeseos.Count == 0 || listDeseos.Contains(etiqueta)){
   
                         if(MetaViable(kv.Key)){
                             result = 0; 
                             if(BioNecesidad(etiqueta)) result = 1;
-                            else result += yo.Puntua(kv.Value.rasgo)/pesoPersonalidad;//else if(!Meta_.Equals(kv.Key)) result += yo.Puntua(kv.Value.rasgo)/pesoPersonalidad;
-                            //else  result += yo.Puntua(kv.Value.rasgo)/(pesoPersonalidad*2);
+                            else result += yo.Puntua(kv.Value.rasgo)/pesoPersonalidad;
 
                             result += GetOntologyElement(kv.Key);
                             result += ElementoDistancia(kv.Key);
@@ -95,7 +81,7 @@ public partial class BaseDeliberativo : MonoBehaviour
                     if(isBreak) {isBreak = false; break;};
                 }
             }
-            if(metaSelected.Equals("")){listDeseos.Clear();  GetComponent<DatosEntidad>().Resets++; return;}//Util.Print("Reset: " + nombreAgente, true);
+            if(metaSelected.Equals("")){listDeseos.Clear();  GetComponent<DatosEntidad>().Resets++; IniciarDeliberacion(); return;}
             if(ObjetivoTemporal!=null) ObjetivoTemporalFinal = ObjetivoTemporal;
             ElementoDistancia(metaSelected, true);
             GetOntologyElement(metaSelected, true);
@@ -106,18 +92,11 @@ public partial class BaseDeliberativo : MonoBehaviour
 
     public void IniciarMeta(string meta)
     {
-        /*foreach(string etiqueta in DataMeta.dicGoals[metaSelected].etiquetas) 
-            if(listDeseos.Contains(etiqueta))
-            {
-                listDeseos.Remove(etiqueta);
-                break;
-            }*/
-
         Meta_ = meta;
         Objeto_ = elemento;
         Objetivo_ = vectorObjetivo;
         Elemento_ = ElementoTemporal;
-        ObjetivoTemporal = null; //destinoAlcanzado = false;
+        ObjetivoTemporal = null;
         Ejecutar();
     }
 
@@ -127,7 +106,6 @@ public partial class BaseDeliberativo : MonoBehaviour
             listDeseos.Add(msg);
             mensajeRecibido = true;
             IniciarDeliberacion();
-            if(metaSelected.Equals("")) IniciarDeliberacion();
         }
         mensajeRecibido = false;
     }
@@ -247,17 +225,13 @@ public partial class BaseDeliberativo : MonoBehaviour
 
     protected virtual void Ejecutar()
     {
-        //ejecutandoMeta = true;
-
         switch (Meta_)
         {
             default:
                 Util.Print(Meta_, isDebug);
                 break;
         }
-        //ejecutandoMeta = false;
         IniciarDeliberacion();
-        if(metaSelected.Equals("")) IniciarDeliberacion();
     }
 
     protected virtual void Ir()
@@ -328,44 +302,6 @@ public class Personalidad
         }
         ParsePersonality();//Debug.Log(myPersAttributes);
     }
-
-    /*public void CreatePersonality()
-    {
-        System.Random rnd = new System.Random();
-
-        string strValues, distribution = "";
-        double values, subValues = 0, first = 0, second = 0;
-
-        for (int x = 0; x < persValues.Length; x++)
-        {
-            strValues = rnd.NextDouble().ToString("0.00");
-            values = double.Parse(strValues);
-            if (values < 0.25) values = 0.25;//min ParValues = 0.5
-
-            if (x % 2 == 0)
-            {
-                subValues = values * 2;
-                distribution = rnd.NextDouble().ToString("0.00");
-
-                first = subValues * double.Parse(distribution);
-
-                if (first > 1) first = 1;
-
-                persValues[x] = double.Parse(first.ToString("0.00"));
-            }
-            else
-            {
-                second = subValues - (subValues * double.Parse(distribution));
-
-                if (second > 1) second = 1;
-
-                persValues[x] = double.Parse(second.ToString("0.00"));
-            }
-            //Console.WriteLine(persValues[x]);
-        }
-        ParsePersonality();
-        //Debug.Log(myPersAttributes);
-    }*/
 
     void ParsePersonality()
     {

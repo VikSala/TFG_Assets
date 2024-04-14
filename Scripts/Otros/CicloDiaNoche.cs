@@ -10,14 +10,34 @@ public class CicloDiaNoche : MonoBehaviour
     public Transform Agentes;
     public float transicion = 1;
     private int numIteraciones = 1;
-    //int seed;
 
     void Start()
     {
-        //seed = System.Environment.TickCount;//textoDia.text = "Día 0  Semilla: " + System.Environment.TickCount;
-        if(isManager) FadeInterfaz(true);
-        InvokeRepeating("IniciarNoche", 0f, 60f);
-        InvokeRepeating("IniciarDia", 0f, 80f);
+        bool isMultiSimulation = GetComponent<NavMUpdate>().multiSimulation;
+
+        if(isManager) 
+        {
+            Application.targetFrameRate = 60;
+        }
+
+        if(isMultiSimulation) InvokeRepeating("IniciarCicloMultiSim", 0.1f, 0.1f);
+        else
+        {
+            FadeInterfaz(true);
+            InvokeRepeating("IniciarNoche", 0f, 60f);
+            InvokeRepeating("IniciarDia", 0f, 80f);
+        }
+    }
+
+    void IniciarCicloMultiSim()
+    {
+        if(GetComponent<MultiSimulation>().iniciarCicloDiario)
+        {
+            GetComponent<MultiSimulation>().iniciarCicloDiario = false;
+            FadeInterfaz(true);
+            InvokeRepeating("IniciarNoche", 0f, 60f);
+            InvokeRepeating("IniciarDia", 0f, 80f);
+        }
     }
 
     void IniciarDia()
@@ -47,7 +67,6 @@ public class CicloDiaNoche : MonoBehaviour
         if (numIteraciones == 4 && Application.isEditor && !isManager)
         {
             Invoke("GuardarSimData", Random.Range(1, 3));
-            //Debug.Log("== Simulacion " + Util.seed + " Guardada ==");
         }
     }
 

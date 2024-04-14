@@ -152,8 +152,7 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                     finalizar = true; 
                     Ejecutar();
                     Util.Print("Enemigo Perdido...", isDebug);
-                    instancias[Util.StrEnum(Percepcion.Amenaza)].Clear(); 
-                    //IniciarDeliberacion();
+                    instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
                     return;
                 }
                 
@@ -192,7 +191,6 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                     NuevoEstado(Util.StrEnum(Percepcion.Hambre), false);
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Hambre))) listDeseos.Remove(Util.StrEnum(Percepcion.Hambre));
                 IniciarDeliberacion();
-                if(metaSelected.Equals("")) IniciarDeliberacion();
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Beber)):
                 Util.Print("Beber", isDebug);
@@ -202,7 +200,6 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
                 NuevoEstado(Util.StrEnum(Percepcion.Sed), false);
                 if(listDeseos.Contains(Util.StrEnum(Percepcion.Sed))) listDeseos.Remove(Util.StrEnum(Percepcion.Sed));
                 IniciarDeliberacion();
-                if(metaSelected.Equals("")) IniciarDeliberacion();
                 break;
             case string a when a.Equals(Util.StrEnum(Meta.Dormir)):
                 navegar = true;
@@ -309,7 +306,6 @@ public class AgenteDeliberativoPrototipo : BaseDeliberativo
         {
             finalizar = false;
             IniciarDeliberacion();
-            if(metaSelected.Equals("")) IniciarDeliberacion();
         }
     } 
 }

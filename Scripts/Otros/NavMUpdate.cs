@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using NavMeshBuilder = UnityEngine.AI.NavMeshBuilder;
@@ -18,11 +19,11 @@ public class NavMUpdate : MonoBehaviour
     NavMeshDataInstance m_Instance;
     List<NavMeshBuildSource> meshSources = new List<NavMeshBuildSource>();
 
-    public bool doUpdate = false;
+    public bool doUpdate = false, multiSimulation = false;
 
     void Update() {
         if(doUpdate)
-        {		//TESTING
+        {		
             BuildNavMesh();
             doUpdate = false;
         }
@@ -38,49 +39,75 @@ public class NavMUpdate : MonoBehaviour
             m_Instance = NavMesh.AddNavMeshData(m_NavMesh);
             
 
-            navBounds = GetnavBounds();
+            navBounds = GetNavBounds();
             navBounds.size = navBounds.size + boundsPadding;
 
-            UpdateNavMesh(false);
+            UpdateNavMesh(multiSimulation);
         }
     }
 
-    Bounds GetnavBounds()
+    Bounds GetNavBounds()
     {
-        var dungeonObjects = GetDungeonObjects();
-        var bounds = new Bounds();
-        bool first = true;
-        foreach (var gameObject in dungeonObjects)
+        List<GameObject> navObjects = GetNavObjects();
+        return GetBoundsRecursive(navObjects, new Bounds(), true);
+    }
+
+    Bounds GetBoundsRecursive(List<GameObject> navObjects, Bounds bounds, bool first)
+    {
+        if (navObjects.Count == 0)
         {
-            var renderers = gameObject.GetComponentsInChildren<Renderer>();
-            foreach (var renderer in renderers)
-            {
-                if (first)
-                {
-                    bounds = renderer.bounds;
-                    first = false;
-                }
-                else
-                {
-                    bounds.Encapsulate(renderer.bounds);
-                }
-            }
+            return bounds;
+        }
+
+        GameObject gameObject = navObjects[0];
+        navObjects.RemoveAt(0);
+
+        var renderers = gameObject.GetComponentsInChildren<Renderer>();
+        bounds = UpdateBounds(renderers, bounds, first);
+
+        return GetBoundsRecursive(navObjects, bounds, false);
+    }
+
+    Bounds UpdateBounds(Renderer[] renderers, Bounds bounds, bool first)
+    {
+        if (renderers.Length == 0)
+        {
+            return bounds;
+        }
+
+        Renderer renderer = renderers[0];
+        bounds = UpdateBounds(renderers.Skip(1).ToArray(), bounds, first);
+
+        if (first)
+        {
+            bounds = renderer.bounds;
+            first = false;
+        }
+        else
+        {
+            bounds.Encapsulate(renderer.bounds);
         }
 
         return bounds;
     }
 
-    List<GameObject> GetDungeonObjects()
+    List<GameObject> GetNavObjects()
     {
-        var result = new List<GameObject>();
-
-        var components = GameObject.FindGameObjectsWithTag(Util.TerrainTag);
-        foreach (var component in components) result.Add(component.gameObject);
-
-        return result;
+        return GetNavObjectsRecursive(GameObject.FindGameObjectsWithTag(Util.TerrainTag), new List<GameObject>());
     }
 
+    List<GameObject> GetNavObjectsRecursive(GameObject[] components, List<GameObject> result)
+    {
+        if (components.Length == 0)
+        {
+            return result;
+        }
 
+        GameObject component = components[0];
+        result.Add(component.gameObject);
+
+        return GetNavObjectsRecursive(components.Skip(1).ToArray(), result);
+    }
 
     public void DestroyNavMesh()
     {
@@ -92,23 +119,39 @@ public class NavMUpdate : MonoBehaviour
         navBounds = new Bounds();
     }
 
-
     void CollectMeshSources()
     {
         meshSources.Clear();
+        CollectMeshSourcesRecursive(GameObject.FindGameObjectsWithTag(Util.TerrainTag), 0);
+    }
 
-        var components = GameObject.FindGameObjectsWithTag(Util.TerrainTag);
-        foreach (var component in components)
+    void CollectMeshSourcesRecursive(GameObject[] components, int index)
+    {
+        if (index >= components.Length)
         {
-            var gameObject = component.gameObject;
-            var meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
-            foreach (var meshFilter in meshFilters)
-            {
-                if (meshFilter == null || meshFilter.sharedMesh == null) continue;
-                NavMeshBuildSource source = CreateMeshSource(meshFilter.sharedMesh, meshFilter.transform.localToWorldMatrix);
-                meshSources.Add(source);
-            }
+            return;
         }
+
+        GameObject gameObject = components[index];
+        ProcessMeshFilters(gameObject.GetComponentsInChildren<MeshFilter>(), 0);
+        CollectMeshSourcesRecursive(components, index + 1);
+    }
+
+    void ProcessMeshFilters(MeshFilter[] meshFilters, int index)
+    {
+        if (index >= meshFilters.Length)
+        {
+            return;
+        }
+
+        MeshFilter meshFilter = meshFilters[index];
+        if (meshFilter != null && meshFilter.sharedMesh != null)
+        {
+            NavMeshBuildSource source = CreateMeshSource(meshFilter.sharedMesh, meshFilter.transform.localToWorldMatrix);
+            meshSources.Add(source);
+        }
+
+        ProcessMeshFilters(meshFilters, index + 1);
     }
 
     NavMeshBuildSource CreateMeshSource(Mesh mesh, Matrix4x4 transform)
@@ -140,7 +183,7 @@ public class NavMUpdate : MonoBehaviour
         }
     }
 
-    void OnDrawGizmosSelected()
+    /*void OnDrawGizmosSelected()
     {
         if (!enableRuntimeNavigation) return;
 
@@ -154,7 +197,7 @@ public class NavMUpdate : MonoBehaviour
         var center = navBounds.center;
         var size = navBounds.size;
         Gizmos.DrawWireCube(center, size);
-    }
+    }*/
 
 
     void OnDisable()

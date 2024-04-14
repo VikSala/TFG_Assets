@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 48a9199e4d5a23341855a89c04805dab
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 224909
+  packageName: Data Toolkit - All in one data-driven assistant
+  packageVersion: 1.1.2
+  assetPath: Assets/Data Toolkit/Runtime/CSV Util/CSVTable.cs
+  uploadId: 526997

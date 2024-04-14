@@ -14,11 +14,6 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
     string nombre, id;
     [System.NonSerialized]public bool congelar = false;
 
-    /*void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.Space)) print(estadoActual);
-    }*/
-
     protected override void Start()
     {
         controladorEstados = new ControladorEstados(isDebug);
@@ -27,7 +22,6 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
         //Iniciar percepción interna
         PercepcionInterna();
 
-        //base.Start();
         rps = GameObject.FindWithTag("GameController").GetComponent<RandomPlaneSpawner>();
         GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
         nombre = gameObject.name;
@@ -77,14 +71,14 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                 ejecutandoEfecto = true;
                 gameObject.name = Util.StrEnum(Percepcion.Recurso) + "_" + id;
                 navMeshAgent.isStopped = true;
-                StartCoroutine(InvocarEfecto(Percepcion.Somnolencia, (float)Tiempo.Largo));//Invoke("Meta", (float)Tiempo.Largo);
+                StartCoroutine(InvocarEfecto(Percepcion.Somnolencia, (float)Tiempo.Largo));
                 break;
             case Percepcion.Amenaza:
-                navMeshAgent.speed = velocidadOriginal*1.25f;//Util.Print("El agente detecta amenaza.", isDebug);
+                navMeshAgent.speed = velocidadOriginal*1.25f;
 
                 if(controladorEstados.Contiene(Percepcion.Hambre)){
                     if(controladorEstados.CambiarEstado(Percepcion.Peligro)) 
-                        {   StartCoroutine(InvocarEfecto(Percepcion.Peligro, (float)Tiempo.Medio));//Invoke("Meta", (float)Tiempo.Medio); 
+                        {   StartCoroutine(InvocarEfecto(Percepcion.Peligro, (float)Tiempo.Medio));
                             Util.Print("¡El agente ataca al peligro!", isDebug); TomarDecisiones(targetPosition);}
                 }else 
                 { 
@@ -113,7 +107,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
 
     void Ir(Vector3 destino)
     { 
-        navMeshAgent.isStopped = congelar; //if(congelar) {Morir(); return;}
+        navMeshAgent.isStopped = congelar;
         navMeshAgent.SetDestination(destino); 
 
         if(estadoActual == Percepcion.Peligro || estadoActual == Percepcion.Amenaza)
@@ -124,10 +118,8 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
 
     void Morir()
     {
-        Instantiate(ObjetoCarne, gameObject.transform.position, Quaternion.identity); 
-        //congelar = true;
+        Instantiate(ObjetoCarne, gameObject.transform.position, Quaternion.identity);
         Destroy(gameObject);
-        //cazado = false;
     }
     
     //PERCEPCION INTERNA
@@ -154,8 +146,6 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
         if (congelar) {Morir(); return;}
 
         Collider[] colliders = Physics.OverlapSphere(transform.position, perceptionRadius);
-        
-        //if(navMeshAgent.isStopped && !estoyDurmiendo) Destroy(gameObject);
 
         if (navMeshAgent.isOnNavMesh && navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance)
             if(!ejecutandoEfecto && !inicio) GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
@@ -190,7 +180,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                                         TomarDecisiones(Hambre.transform.position);
                                         GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Base);  
                                         ejecutandoEfecto = true;                                      
-                                        StartCoroutine(InvocarEfecto(Percepcion.Hambre, (float)Tiempo.Corto));//Invoke("Meta", (float)Tiempo.Corto);
+                                        StartCoroutine(InvocarEfecto(Percepcion.Hambre, (float)Tiempo.Corto));
                                     }
                                     break;
                                 case string a when a.Contains(Util.StrEnum(Lugar.Lago)):
@@ -200,7 +190,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
                                         TomarDecisiones(Sed.transform.position);
                                         GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Base);
                                         ejecutandoEfecto = true;
-                                        StartCoroutine(InvocarEfecto(Percepcion.Sed, (float)Tiempo.Corto));//Invoke("Meta", (float)Tiempo.Corto);
+                                        StartCoroutine(InvocarEfecto(Percepcion.Sed, (float)Tiempo.Corto));
                                     }
                                     break;
                                 case string a when a.Contains(Util.StrEnum(Entidad.Agente))/* || a.Contains(Util.StrEnum(Entidad.Animal))*/:
@@ -221,7 +211,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
         {
             GetComponent<AnimChangerLayer>().Animar("Consumir", AnimChangerLayer.Layer.Base);
             ejecutandoEfecto = true;
-            StartCoroutine(InvocarEfecto(Percepcion.Sed, (float)Tiempo.Corto));//Invoke("Meta", (float)Tiempo.Corto);
+            StartCoroutine(InvocarEfecto(Percepcion.Sed, (float)Tiempo.Corto));
         }
     }
     
@@ -236,7 +226,7 @@ public class AgenteReactivoAnimal : AgentePushdownAutomata
     {
         inicio = false;
         if(congelar || !estado.Equals(estadoActual)) return;
-        ejecutandoEfecto = false;//GetComponent<AnimChangerLayer>().Animar("Descansar", AnimChangerLayer.Layer.Base);
+        ejecutandoEfecto = false;
 
         switch (estado)
         {

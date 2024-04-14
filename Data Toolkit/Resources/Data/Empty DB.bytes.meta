@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 350eae0ee681d6a49ad514ab38186d64
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 224909
+  packageName: Data Toolkit - All in one data-driven assistant
+  packageVersion: 1.1.2
+  assetPath: Assets/Data Toolkit/Resources/Data/Empty DB.bytes
+  uploadId: 526997

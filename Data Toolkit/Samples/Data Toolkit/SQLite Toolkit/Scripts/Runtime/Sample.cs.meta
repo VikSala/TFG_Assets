@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 410c60db133933444a130a42b91221da
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 224909
+  packageName: Data Toolkit - All in one data-driven assistant
+  packageVersion: 1.1.2
+  assetPath: Assets/Data Toolkit/Samples/Data Toolkit/SQLite Toolkit/Scripts/Runtime/Sample.cs
+  uploadId: 526997

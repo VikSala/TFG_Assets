@@ -610,7 +610,7 @@ Animator:
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 201a5411e4f83ab4dbb2ae492ea72fdf, type: 2}
-  m_CullingMode: 0
+  m_CullingMode: 2
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
@@ -653,6 +653,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 048bbe8f9fdec394a8b28c002813c5d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  multiSimulation: 0
   myLayer: 0
   yo: 1
   strPlayAnim: 

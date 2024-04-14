@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c66e2471c271bdc49aaa39a01e73dbdd
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 224909
+  packageName: Data Toolkit - All in one data-driven assistant
+  packageVersion: 1.1.2
+  assetPath: Assets/Data Toolkit/CHANGELOG.md
+  uploadId: 526997

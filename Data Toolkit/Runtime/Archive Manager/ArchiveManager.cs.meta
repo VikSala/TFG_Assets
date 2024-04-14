@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: ab6e05a73b3f1f14897c2f49eeb034ca
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 224909
+  packageName: Data Toolkit - All in one data-driven assistant
+  packageVersion: 1.1.2
+  assetPath: Assets/Data Toolkit/Runtime/Archive Manager/ArchiveManager.cs
+  uploadId: 526997

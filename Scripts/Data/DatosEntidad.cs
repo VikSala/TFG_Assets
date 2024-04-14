@@ -99,7 +99,8 @@ public class DatosEntidad : MonoBehaviour{
     {
         SQLiteConnection sqliteDB = new SQLiteConnection(Application.streamingAssetsPath+ "/Samples/Data Toolkit/test.db");
         sqliteDB.InsertValues("Simulacion", 
-            new string[] {  "'"+nombre.Split("_")[1] + "_" + Util.seed+"'", //"'"+nombre+"'",//
+            new string[] {  "'"+nombre+"'",
+                            "'"+"" + CalcularFitness()+"'", 
                             "'"+"" + frecuencia+"'",
                             "'"+"" + resets+"'", 
                             "'"+rasgos+"'",
@@ -120,5 +121,12 @@ public class DatosEntidad : MonoBehaviour{
         //Debug.Log("== Insert New Values Finished ==");
 
         sqliteDB.Close();
+    }
+
+    public int CalcularFitness()
+    {
+        int fitness = GetComponent<AgenteDeliberativoSim>().GetBioValor();
+        fitness = fitness - resets + carne + baya + agua;
+        return fitness; 
     }
 }
