@@ -6,7 +6,7 @@ using System.Collections;
 
 public class AgenteDeliberativoSim : BaseDeliberativo
 {
-    public bool compile = false, isAnimator = false;
+    public bool compile = false, isAnimator = false, isDummy = false;
     public GameObject ManoDerecha, ManoIzquierda;
 
     protected override void Awake()
@@ -48,6 +48,35 @@ public class AgenteDeliberativoSim : BaseDeliberativo
         return (memoria.Contains(Util.StrEnum(Estado.Cansado)) && etiqueta.Equals(Util.StrEnum(Percepcion.Somnolencia))) ||
                                 (memoria.Contains(Util.StrEnum(Estado.Sediento)) && etiqueta.Equals(Util.StrEnum(Percepcion.Sed))) ||
                                 (memoria.Contains(Util.StrEnum(Estado.Hambriento)) && etiqueta.Equals(Util.StrEnum(Percepcion.Hambre)));
+    }
+
+    public override void newMessage(string msg)
+    {
+        if(!listDeseos.Contains(msg)){
+            listDeseos.Add(msg);
+            mensajeRecibido = true;
+            if(isDummy) DecisionAleatoria();
+            else IniciarDeliberacion();
+        }
+        mensajeRecibido = false;
+    }
+
+    void DecisionAleatoria()
+    {
+        metaSelected = ""; 
+        List<string> stringsList = new List<string>();
+
+        if(mensajeRecibido || !finalizar){
+            foreach(var kv in DataMeta.dicGoals)
+            {
+                if(MetaViable(kv.Key)) stringsList.Add(kv.Key);
+            }
+            metaSelected = stringsList[UnityEngine.Random.Range(0, stringsList.Count)];
+            if(ObjetivoTemporal!=null) ObjetivoTemporalFinal = ObjetivoTemporal;
+            ElementoDistancia(metaSelected, true);
+            GetOntologyElement(metaSelected, true);
+            IniciarMeta(metaSelected);
+        }
     }
 
     public int GetBioValor()
@@ -248,7 +277,8 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                         instancias[Util.StrEnum(Percepcion.Amenaza)].Clear();
                         finalizar = false;
                         AnimarElemento(Objeto_, false);
-                        IniciarDeliberacion();
+                        if(isDummy) DecisionAleatoria();
+                        else IniciarDeliberacion();
                     }
                     
                 }
@@ -276,7 +306,8 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                     }
                     else{
                         finalizar = false;
-                        IniciarDeliberacion();
+                        if(isDummy) DecisionAleatoria();
+                        else IniciarDeliberacion();
                     }
                 }
                 break;
@@ -454,7 +485,8 @@ public class AgenteDeliberativoSim : BaseDeliberativo
                 break;
         }
         finalizar = false;
-        IniciarDeliberacion();
+        if(isDummy) DecisionAleatoria();
+        else IniciarDeliberacion();
     } 
     
     IEnumerator InvocarEfecto(string meta, float tiempo)

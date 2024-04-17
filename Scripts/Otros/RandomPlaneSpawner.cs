@@ -88,7 +88,7 @@ public class RandomPlaneSpawner : MonoBehaviour
     {
         if(doSpawn){
             //Destroy gameobject tag Respawn
-            GameObject respawnObject = GameObject.FindWithTag("Respawn");
+            GameObject respawnObject = GameObject.FindWithTag(Util.SpawnTag);
             if(respawnObject != null) Destroy(respawnObject);
             
             //Ejecutar el spawn
@@ -103,7 +103,7 @@ public class RandomPlaneSpawner : MonoBehaviour
 
         // Crear un objeto vacío como contenedor
         GameObject container = new GameObject("Contenedor");
-        container.tag = "Respawn";
+        container.tag = Util.SpawnTag;
 
         //Instanciar: Amenazas
         for (int i = 0; i < numberOfObjects; i++)

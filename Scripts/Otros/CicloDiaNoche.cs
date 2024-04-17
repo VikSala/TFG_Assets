@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class CicloDiaNoche : MonoBehaviour
 {
-    public bool isManager = false;
+    public bool isManager = false;//public bool isPrefab = true; bool isOn = true;
     public Light luz;
     public Image pantallaNegra;
     public Text textoDia;
@@ -13,20 +13,33 @@ public class CicloDiaNoche : MonoBehaviour
 
     void Start()
     {
-        bool isMultiSimulation = GetComponent<NavMUpdate>().multiSimulation;
+        bool isMultiSimulation = false;
 
         if(isManager) 
         {
             Application.targetFrameRate = 60;
-        }
-
-        if(isMultiSimulation) InvokeRepeating("IniciarCicloMultiSim", 0.1f, 0.1f);
-        else
+            isMultiSimulation = GetComponent<NavMUpdate>().multiSimulation;
+            if(isMultiSimulation) InvokeRepeating("IniciarCicloMultiSim", 0.1f, 0.1f);
+            else
+            {
+                FadeInterfaz(true);
+                InvokeRepeating("IniciarNoche", 0f, 60f);
+                InvokeRepeating("IniciarDia", 0f, 80f);
+            }
+        }else
         {
-            FadeInterfaz(true);
             InvokeRepeating("IniciarNoche", 0f, 60f);
             InvokeRepeating("IniciarDia", 0f, 80f);
         }
+
+        //if(isMultiSimulation) InvokeRepeating("IniciarCicloMultiSim", 0.1f, 0.1f);
+        //else if(isPrefab) InvokeRepeating("IniciarCicloMultiSimPrefab", 0.1f, 0.1f);
+        //else
+        //{ FadeInterfaz(true); InvokeRepeating("IniciarNoche", 0f, 60f); InvokeRepeating("IniciarDia", 0f, 80f); }*/
+
+        /*if(isManager) FadeInterfaz(true);
+        InvokeRepeating("IniciarNoche", 0f, 10f);
+        InvokeRepeating("IniciarDia", 0f, 20f);*/
     }
 
     void IniciarCicloMultiSim()
@@ -34,7 +47,7 @@ public class CicloDiaNoche : MonoBehaviour
         if(GetComponent<MultiSimulation>().iniciarCicloDiario)
         {
             GetComponent<MultiSimulation>().iniciarCicloDiario = false;
-            FadeInterfaz(true);
+            FadeInterfaz(true); 
             InvokeRepeating("IniciarNoche", 0f, 60f);
             InvokeRepeating("IniciarDia", 0f, 80f);
         }
@@ -62,7 +75,7 @@ public class CicloDiaNoche : MonoBehaviour
 
     void IniciarNoche() 
     { 
-        if(isManager) luz.enabled = false; 
+        if(isManager) luz.enabled = false;  //if(!isPrefab) luz.enabled = false; 
         
         if (numIteraciones == 4 && Application.isEditor && !isManager)
         {

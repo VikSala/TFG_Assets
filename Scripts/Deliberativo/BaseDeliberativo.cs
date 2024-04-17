@@ -32,11 +32,12 @@ public partial class BaseDeliberativo : MonoBehaviour
     public Dictionary<string, HashSet<string>> instancias = new Dictionary<string, HashSet<string>>(){};
 
     string nombreAgente = "";
+    public GameObject Simulation;
 
     protected virtual void Awake()
     {
         frecuencia = UnityEngine.Random.Range(0.05f, 0.25f);
-        nombreAgente = gameObject.name + "_" + Util.seed;
+        nombreAgente = gameObject.name + "_" + Simulation.name.Split("_")[1];
         yo = new Personalidad();
 
         GetComponent<DatosEntidad>().Nombre = nombreAgente;
@@ -100,7 +101,7 @@ public partial class BaseDeliberativo : MonoBehaviour
         Ejecutar();
     }
 
-    public void newMessage(string msg)
+    public virtual void newMessage(string msg)
     {
         if(!listDeseos.Contains(msg)){
             listDeseos.Add(msg);

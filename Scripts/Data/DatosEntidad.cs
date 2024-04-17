@@ -99,11 +99,10 @@ public class DatosEntidad : MonoBehaviour{
     {
         SQLiteConnection sqliteDB = new SQLiteConnection(Application.streamingAssetsPath+ "/Samples/Data Toolkit/test.db");
         sqliteDB.InsertValues("Simulacion", 
-            new string[] {  "'"+nombre+"'",
+            new string[] {  "'"+nombre+"'",//"'"+nombre+"'",
                             "'"+"" + CalcularFitness()+"'", 
                             "'"+"" + frecuencia+"'",
-                            "'"+"" + resets+"'", 
-                            "'"+rasgos+"'",
+                            "'"+"" + resets+"'",
                             "'"+"" + carne+"'", 
                             "'"+"" + baya+"'", 
                             "'"+"" + agua+"'", 
@@ -115,10 +114,9 @@ public class DatosEntidad : MonoBehaviour{
                             "'"+"" + recolectar+"'",
                             "'"+"" + cocinar+"'", 
                             "'"+"" + comerciar+"'",
-                            "'"+"" + irLago+"'"
+                            "'"+"" + irLago+"'", 
+                            "'"+rasgos+"'"
                         });
-
-        //Debug.Log("== Insert New Values Finished ==");
 
         sqliteDB.Close();
     }

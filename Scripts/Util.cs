@@ -6,7 +6,12 @@ public partial class Util : MonoBehaviour
 {
     public static int seed; public int semilla; public bool useSeed = false;
     public static bool compartirSemilla = false, multiSimLista = false;
-    public static string AND = "1", SpawnTag = "Respawn", TerrainTag = "Terrain"; public static char NOT = '0';
+    public static char NOT = '0';
+    public static string AND = "1", SpawnTag = "Respawn", TerrainTag = "Terrain";
+    /*
+    SpawnTag = Escenas Prototipo
+    TerrainTag = Terrain, SpawnPlane, Navigation
+    */
     public static Dictionary<string, string> tipoObjeto = GetTipoObjeto();
 
     void Awake()
